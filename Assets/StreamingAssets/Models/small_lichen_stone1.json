@@ -33,11 +33,11 @@
         ]
       },
       "minecraft:geometry": {
-        "identifier": "small_lichen_stone1.geo"
+        "identifier": "geometry.xxx.small_lichen_stone1"
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "D:\\Unity_Project\\Entity_Generator\\BlockBuild\\Assets\\StreamingAssets\\Extract\\block\\small_lichen_stone.png",
+          "texture": "xxx:small_lichen_stone",
           "render_method": "alpha_test"
         }
       },

@@ -206,10 +206,8 @@ public class create_scene : MonoBehaviour
 
 
                             Data.BlockData blockData = new Data.BlockData();
-                            blockData.rotationType = Data.RotationData.types[0];
                             blockData.blockName = jsonFile.Name.Replace(".geo.json","");
                             blockData.format_Version = Data.VersionData.versions[0];
-                            blockData.collision = true;
                             blockData.geomerty = jsonFile.FullName;
                             blockData.texture = png.FullName;
                             main.instance.all_blockData.Add(blockData);

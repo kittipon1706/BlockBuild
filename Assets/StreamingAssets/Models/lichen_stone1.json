@@ -11,11 +11,11 @@
       "minecraft:selection_box": true,
       "minecraft:collision_box": true,
       "minecraft:geometry": {
-        "identifier": "lichen_stone1.geo"
+        "identifier": "geometry.xxx.lichen_stone1"
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "D:\\Unity_Project\\Entity_Generator\\BlockBuild\\Assets\\StreamingAssets\\Extract\\block\\lichen_stone1.png",
+          "texture": "xxx:lichen_stone1",
           "render_method": "alpha_test"
         }
       },
