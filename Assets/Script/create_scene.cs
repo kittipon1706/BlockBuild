@@ -213,7 +213,7 @@ public class create_scene : MonoBehaviour
                             main.instance.all_blockData.Add(blockData);
                             GameObject model_obj = Block_Preview.instance.LoadGeoModel(jsonNameWithoutExtension);
                             main.instance.Calculate_Selection_Box(jsonNameWithoutExtension, model_obj);
-                            JsonData.SaveToFile(Path.Combine(UnityEngine.Application.streamingAssetsPath + main.instance.modelPath, blockData.blockName + ".json"), blockData);
+                            JsonData.SaveToFile(geo_destinationPath.Replace(".geo",""), blockData);
                         }
                     }
                 }
@@ -249,6 +249,7 @@ public class create_scene : MonoBehaviour
             offset.z = main.instance.SmartRound(result.selectionBox_origin.z + (result.selectionBox_size.z / 2f));
             offset_Box.SetValue(offset);
             size_Box.SetValue(result.selectionBox_size);
+            JsonData.SaveToFile(Path.GetFileNameWithoutExtension(result.geomerty).Replace(".geo", ""), result);
         }
         else
         {

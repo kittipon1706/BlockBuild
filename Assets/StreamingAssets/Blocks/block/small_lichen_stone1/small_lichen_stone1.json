@@ -53,6 +53,56 @@
         ]
       },
       "tag:minecraft:is_pickaxe_item_destructible": {}
-    }
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state.facing == north",
+        "components": {
+          "minecraft__transformation": {
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state.facing == east",
+        "components": {
+          "minecraft__transformation": {
+            "rotation": [
+              0.0,
+              90.0,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state.facing == south",
+        "components": {
+          "minecraft__transformation": {
+            "rotation": [
+              0.0,
+              180.0,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state.facing == west",
+        "components": {
+          "minecraft__transformation": {
+            "rotation": [
+              0.0,
+              270.0,
+              0.0
+            ]
+          }
+        }
+      }
+    ]
   }
 }
