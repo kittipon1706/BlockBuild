@@ -161,9 +161,9 @@ public class create_scene : MonoBehaviour
         {
             FileInfo[] pngFiles = SubDir.GetFiles("*.png");
             
-            foreach (FileInfo jsonFile in SubDir.GetFiles("*.json"))
+            foreach (FileInfo jsonFile in SubDir.GetFiles("*.geo.json"))
             {
-                if (jsonFile.Name.EndsWith(".json") && !jsonFile.Name.EndsWith(".meta"))
+                if (jsonFile.Name.EndsWith(".geo.json") && !jsonFile.Name.EndsWith(".meta"))
                 {
                     string jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonFile.Name);
                     jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonNameWithoutExtension);

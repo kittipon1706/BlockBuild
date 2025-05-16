@@ -1,0 +1,36 @@
+{
+  "format_version": "1.1",
+  "minecraft:block": {
+    "description": {
+      "identifier": ":lichen_stone1",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:selection_box": true,
+      "minecraft:collision_box": true,
+      "minecraft:geometry": {
+        "identifier": "geometry..lichen_stone1"
+      },
+      "minecraft:material_instances": {
+        "*": {
+          "texture": ":lichen_stone1",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": "1.0",
+        "item_specific_speeds": [
+          {
+            "item": {
+              "tags": "q.any_tag('minecraft:is_pickaxe')"
+            },
+            "destroy_speed": 0.5
+          }
+        ]
+      },
+      "tag:minecraft:is_pickaxe_item_destructible": {}
+    }
+  }
+}
