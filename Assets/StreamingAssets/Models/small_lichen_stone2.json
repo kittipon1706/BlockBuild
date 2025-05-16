@@ -33,11 +33,11 @@
         ]
       },
       "minecraft:geometry": {
-        "identifier": "geometry.xxxsmall_lichen_stone2"
+        "identifier": "small_lichen_stone2.geo"
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "xxx:small_lichen_stone",
+          "texture": "D:\\Unity_Project\\Entity_Generator\\BlockBuild\\Assets\\StreamingAssets\\Extract\\block\\small_lichen_stone.png",
           "render_method": "alpha_test"
         }
       },
@@ -46,7 +46,7 @@
         "item_specific_speeds": [
           {
             "item": {
-              "tags": "q.any_tag('minecraft:is_pickaxe') "
+              "tags": "q.any_tag('minecraft:is_pickaxe')"
             },
             "destroy_speed": 0.5
           }

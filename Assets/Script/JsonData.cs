@@ -48,16 +48,18 @@ public class JsonData : MonoBehaviour
                 }
             };
 
+        // minecraft:geometry
         components["minecraft:geometry"] = new
         {
-            identifier = Path.GetFileNameWithoutExtension(data.geomerty)
+            identifier = "geometry." + data.namespaceId + "." + Path.GetFileNameWithoutExtension(data.geomerty).Replace(".geo", "")
         };
 
+        // minecraft:material_instances
         components["minecraft:material_instances"] = new Dictionary<string, object>
     {
         {
             "*", new {
-                texture = data.texture,
+                texture =  data.namespaceId + ":" + Path.GetFileNameWithoutExtension(data.texture),
                 render_method = data.render_method
             }
         }

@@ -42,7 +42,7 @@ public class Data : MonoBehaviour
     {
         public string blockName;
         public string namespaceId = "xxx";
-        public string rotationType = "Default";
+        public string rotationType = "Cardinal";
         public string format_Version;
         public bool collision = true;
         public string render_method = "alpha_test";
