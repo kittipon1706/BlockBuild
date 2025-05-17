@@ -26,6 +26,9 @@ public class Block_Preview : MonoBehaviour
     private Transform model_panel;
 
     [SerializeField]
+    private GameObject default_obj;
+
+    [SerializeField]
     private GameObject model_obj;
     void Awake()
     {
@@ -39,7 +42,7 @@ public class Block_Preview : MonoBehaviour
     void Start()
     {
         degree_slider.value = 0;
-        main.instance.RemoveAllContent(model_panel);
+        ClearModel(true);
         degree_slider.onValueChanged.AddListener(RotateModel);
         scale_slider.onValueChanged.AddListener(ChangeScale);
     }
@@ -62,9 +65,16 @@ public class Block_Preview : MonoBehaviour
 
     }
 
-    public GameObject LoadGeoModel(string name)
+    public void ClearModel(bool defualtSpawn)
     {
         main.instance.RemoveAllContent(model_panel);
+        if (defualtSpawn)
+            Instantiate(default_obj, model_panel);
+    }
+
+    public GameObject LoadGeoModel(string name)
+    {
+        ClearModel(false);
         BlockData result = main.instance.all_blockData.Find(block => block.blockName == name);
         if (result == null) {
             Debug.LogError("can not find BlockData");
@@ -279,8 +289,6 @@ public class Block_Preview : MonoBehaviour
             {
                 uvs[startIndex + i] = faceUVs[i];
             }
-
-            Debug.Log($"{face.uv[0]}, {face.uv[1]} | size: {face.uv_size[0]}, {face.uv_size[1]} | rotation: {face.uv_rotation}");
         }
 
         SetFaceUV(cubeData.uv.north, 0);   // Front

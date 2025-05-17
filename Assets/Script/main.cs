@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -30,7 +31,10 @@ public class main : MonoBehaviour
     [SerializeField]
     private GameObject group_prefab;
     [SerializeField]
+    public List<Data.BlockData> all_HoldblockData = new List<Data.BlockData>();
+    [SerializeField]
     public List<Data.BlockData> all_blockData = new List<Data.BlockData>();
+
     void Awake()
     {
         if(instance == null)
@@ -161,46 +165,18 @@ public class main : MonoBehaviour
 #endif
     }
 
-    public List<GameObject> CreateBLocksCentent(DirectoryInfo block_dir, Transform panel, Data.BlockData blockData, string subfolder)
+    public GameObject CreateBLockCentent(Transform panel, Data.BlockData blockData, string subfolder)
     {
-        List<GameObject> result = new List<GameObject>();
-        if (block_dir != null)
+        if (blockData != null)
         {
-            //CopyAll(new DirectoryInfo(block_dir.FullName), new DirectoryInfo(Application.streamingAssetsPath + main.instance.blockPath));
-
-            foreach (DirectoryInfo subDir in block_dir.GetDirectories())
-            {
-                foreach (FileInfo file in subDir.GetFiles())
-                {
-                    if (!file.Name.Contains(".meta") && file.Name.Contains(".json"))
-                    {
-                        button button = Instantiate(block_prefab, panel.transform).GetComponent<button>();
-                        button.name = file.Name;
-                        button.sub_folder = subfolder;
-                        button.blockData = blockData;
-                        result.Add(button.gameObject);
-                    }
-                }
-            }
-
-            foreach (FileInfo file in block_dir.GetFiles())
-            {
-                if (!file.Name.Contains(".meta") && file.Name.Contains(".json"))
-                {
-                    button button = Instantiate(block_prefab, panel.transform).GetComponent<button>();
-                    button.name = file.Name;
-                    button.sub_folder = subfolder;
-                    button.blockData = blockData;
-                    result.Add(button.gameObject);
-                }
-            }
+            GameObject button_obj = Instantiate(block_prefab, panel.transform);
+            button button = button_obj.GetComponent<button>();
+            button.name = blockData.blockName;
+            button.sub_folder = subfolder;
+            button.blockData = blockData;
+            return button_obj;
         }
-        else Debug.LogError("Fail");
-
-#if UNITY_EDITOR
-        AssetDatabase.Refresh();
-#endif
-        return result;
+        else return null;
     }
 
     public GameObject CreateGroupContent(string name, Transform panel)
@@ -313,5 +289,82 @@ public class main : MonoBehaviour
             return Mathf.Ceil(value);
         else
             return Mathf.Floor(value);
+    }
+    public BlockData Get_BlockData(string name)
+    {
+        return all_blockData.FirstOrDefault(b => b.blockName == name) ?? null;
+    }
+
+    public void Set_BlockData(string name, DataType dataType, string value, Vector3 vecValue)
+    {
+        BlockData blockData = Get_BlockData(name);
+
+        if (blockData != null)
+        {
+            switch (dataType)
+            {
+                case DataType.Version :
+                    blockData.format_Version = value;
+                    break;
+                case DataType.Render:
+                    blockData.render_method = value;
+                    break;
+                case DataType.Rotation:
+                    blockData.rotationType = value;
+                    break;
+                case DataType.Collision:
+                    blockData.collision = value;
+                    break;
+                case DataType.NameSpace:
+                    blockData.namespaceId = value;
+                    break;
+                case DataType.Selection_Box_Origin:
+                    blockData.selectionBox_origin = vecValue;
+                    break;
+                case DataType.Selection_Box_Size:
+                    blockData.selectionBox_size = vecValue;
+                    break;
+            }
+            int index = all_blockData.FindIndex(b => b.blockName == blockData.blockName);
+            all_blockData[index] = blockData;
+        }
+        else
+        {
+            all_blockData.Add(blockData);
+        }
+    }
+
+    public void Set_HoldBlackData(BlockData blockData)
+    {
+        int index = all_HoldblockData.FindIndex(b => b.blockName == blockData.blockName);
+
+        if (index != -1)
+        {
+            all_HoldblockData[index] = blockData;
+        }
+        else
+        {
+            all_HoldblockData.Add(blockData);
+        }
+    }
+
+    public void Remove_HoldBlackData(BlockData blockData)
+    {
+        all_HoldblockData.RemoveAll(b => b.blockName == blockData.blockName);
+    }
+
+    public void RemoveAll_HoldBlackData()
+    {
+        button[] buttons = FindObjectsOfType<button>();
+
+        foreach (button btn in buttons)
+        {
+            btn.Set_Hold(false);
+        }
+    }
+
+    public List<BlockData> Get_AllHoldBlackData()
+    {
+        return all_HoldblockData;
     }
 }

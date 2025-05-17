@@ -14,8 +14,6 @@ public class Content : MonoBehaviour
     [SerializeField]
     private Button apply_all_select;
     [SerializeField]
-    private TMP_InputField content_input;
-    [SerializeField]
     public TMP_Dropdown content_dropdown;
     [SerializeField]
     private Data.DataType dataType;
@@ -26,23 +24,21 @@ public class Content : MonoBehaviour
     {
         content_name.text = GetNameByType(dataType);
         List<string> displayData = GetDataByType(dataType);
-        if(content_dropdown != null)
-        {
-            content_dropdown.ClearOptions();
-            content_dropdown.AddOptions(displayData);
-            content_dropdown.onValueChanged.AddListener(GetSelectedData);
-            GetSelectedData(0);
-        }
-        else if (content_input != null)
-        {
-
-        }
+        content_dropdown.ClearOptions();
+        content_dropdown.AddOptions(displayData);
+        content_dropdown.onValueChanged.AddListener(GetSelectedData);
+        GetSelectedData(0);
     }
 
     void GetSelectedData(int index)
     {
         selectedData = GetDataValueByType(dataType, index);
-        create_scene.instance.SetSelectedBlockData();
+        if (selectedData == "---") return;
+        List<BlockData> tempList = new List<BlockData>(main.instance.Get_AllHoldBlackData());
+        foreach (BlockData blockData in tempList)
+        {
+            main.instance.Set_BlockData(blockData.blockName, dataType, selectedData, Vector3.zero);
+        }
     }
 
     string GetDataValueByType(DataType type, int index)

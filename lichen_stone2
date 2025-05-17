@@ -2,7 +2,7 @@
   "format_version": "1.20.80",
   "minecraft:block": {
     "description": {
-      "identifier": "xxx:lichen_stone1",
+      "identifier": "xxx:lichen_stone2",
       "menu_category": {
         "category": "construction"
       }
@@ -11,11 +11,11 @@
       "minecraft:selection_box": true,
       "minecraft:collision_box": true,
       "minecraft:geometry": {
-        "identifier": "geometry.xxx.lichen_stone1"
+        "identifier": "geometry.xxx.lichen_stone2"
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "xxx:lichen_stone1",
+          "texture": "xxx:lichen_stone2",
           "render_method": "alpha_test"
         }
       },

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
 using static Data;
 
@@ -33,7 +34,7 @@ public class JsonData : MonoBehaviour
             };
 
         // กำหนด collision_box
-        components["minecraft:collision_box"] = (!data.collision || isDisabledBox) ? false :
+        components["minecraft:collision_box"] = (data.collision == "false" || isDisabledBox) ? false :
             isDefaultBox ? true : new
             {
                 origin = new float[] {

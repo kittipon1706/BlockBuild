@@ -1,17 +1,14 @@
 using PimDeWitte.UnityMainThreadDispatcher;
-using Siccity.GLTFUtility;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using TMPro;
-using TMPro.EditorUtilities;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 using static Data;
+using UnityEngine.UI;
+using static UnityEngine.ParticleSystem;
 
 public class create_scene : MonoBehaviour
 {
@@ -37,12 +34,6 @@ public class create_scene : MonoBehaviour
 
     [SerializeField]
     public Transform group_panel;
-
-    [SerializeField]
-    private Transform model_panel;
-
-    [SerializeField]
-    private Data.BlockData SelectedBlock;
 
     [SerializeField]
     private TMP_InputField namespace_input;
@@ -85,7 +76,11 @@ public class create_scene : MonoBehaviour
         reset_project_btn.onClick.AddListener(main.instance.Reset_Project);
         select_asset_btn.onClick.AddListener(Select_Asset);
         namespace_input.onEndEdit.AddListener((string value) => {
-            SetSelectedBlockData();
+            foreach (BlockData blockData in main.instance.Get_AllHoldBlackData())
+            {
+                main.instance.Set_BlockData(blockData.blockName, DataType.NameSpace, value, Vector3.zero);
+            }
+            Get_SelectedBlockData(main.instance.Get_AllHoldBlackData());
         });
         RemoveGroupContent();
         RemoveBlocksContent();
@@ -124,14 +119,16 @@ public class create_scene : MonoBehaviour
             file_path.text = paths[0];
         }
 #endif
-            DirectoryInfo directoryInfo = new DirectoryInfo(asset_path.text);
-            foreach (DirectoryInfo diSourceSubDir in directoryInfo.GetDirectories())
+            DirectoryInfo asset_directoryInfo = new DirectoryInfo(asset_path.text);
+            main.instance.LoadBlockAsset(asset_directoryInfo);
+            DirectoryInfo no_folder_directoryInfo = new DirectoryInfo(Application.streamingAssetsPath + main.instance.extractPath);
+            MatchBlockFile(no_folder_directoryInfo, true);
+            DirectoryInfo subs_folder_directoryInfo = new DirectoryInfo(Application.streamingAssetsPath + main.instance.extractPath);
+            foreach (DirectoryInfo sub_folder_directoryInfo in subs_folder_directoryInfo.GetDirectories())
             {
-                Directory.CreateDirectory(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + diSourceSubDir.Name);
+                MatchBlockFile(sub_folder_directoryInfo, false);
             }
-            main.instance.LoadBlockAsset(directoryInfo);
-            MatchBlockFile();
-            List<GameObject> groups = main.instance.CreateGroupsContent(directoryInfo, group_panel);
+            List<GameObject> groups = main.instance.CreateGroupsContent(asset_directoryInfo, group_panel);
             groups.Add(main.instance.CreateGroupContent("", group_panel));
             foreach (GameObject group in groups)
             {
@@ -140,86 +137,83 @@ public class create_scene : MonoBehaviour
                 group_Button.my_button.onClick.AddListener(RemoveBlocksContent);
                 group_Button.my_button.onClick.AddListener(() =>
                 {
-                    DirectoryInfo block_dir1 = new DirectoryInfo(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + group_Button.name);
-                    main.instance.CreateBLocksCentent(block_dir1, block_panel, null, group_Button.name);
+                    DirectoryInfo blocks_dirs = new DirectoryInfo(Application.streamingAssetsPath + main.instance.blockPath + "/" + group_Button.name);
+                    foreach(DirectoryInfo blocks_dir in blocks_dirs.GetDirectories())
+                    {
+                        FileInfo[] jsonFiles = blocks_dir.GetFiles("*.geo.json");
+                        foreach (FileInfo jsonFile in jsonFiles)
+                        {
+                            main.instance.CreateBLockCentent(block_panel, main.instance.Get_BlockData(jsonFile.Name.Replace(".geo.json", "")), group_Button.name);
+                        }
+                    }
                 });
             }
-
-
-            DirectoryInfo directoryInfo1 = new DirectoryInfo((UnityEngine.Application.streamingAssetsPath + main.instance.blockPath));
-            main.instance.CreateBLocksCentent(directoryInfo1, block_panel, null, "");
+            Block_Preview.instance.ClearModel(false);
 #if UNITY_EDITOR
             AssetDatabase.Refresh();
 #endif
         }
     }
 
-    private void MatchBlockFile()
+    private void MatchBlockFile(DirectoryInfo directoryInfo, bool createObj)
     {
-        DirectoryInfo directoryInfo = new DirectoryInfo(UnityEngine.Application.streamingAssetsPath + main.instance.extractPath);
-        foreach (DirectoryInfo SubDir in directoryInfo.GetDirectories())
+        FileInfo[] pngFiles = directoryInfo.GetFiles("*.png");
+
+        foreach (FileInfo jsonFile in directoryInfo.GetFiles("*.geo.json"))
         {
-            FileInfo[] pngFiles = SubDir.GetFiles("*.png");
-            
-            foreach (FileInfo jsonFile in SubDir.GetFiles("*.geo.json"))
+            if (jsonFile.Name.EndsWith(".geo.json") && !jsonFile.Name.EndsWith(".meta"))
             {
-                if (jsonFile.Name.EndsWith(".geo.json") && !jsonFile.Name.EndsWith(".meta"))
+                string jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonFile.Name);
+                jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonNameWithoutExtension);
+
+                foreach (FileInfo png in pngFiles)
                 {
-                    string jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonFile.Name);
-                    jsonNameWithoutExtension = Path.GetFileNameWithoutExtension(jsonNameWithoutExtension);
+                    string pngNameWithoutExtension = Path.GetFileNameWithoutExtension(png.Name);
+                    pngNameWithoutExtension = Path.GetFileNameWithoutExtension(pngNameWithoutExtension);
 
-                    foreach (FileInfo png in pngFiles)
+                    if (jsonNameWithoutExtension.StartsWith(pngNameWithoutExtension))
                     {
-                        string pngNameWithoutExtension = Path.GetFileNameWithoutExtension(png.Name);
-                        pngNameWithoutExtension = Path.GetFileNameWithoutExtension(pngNameWithoutExtension);
+                        Directory.CreateDirectory(Application.streamingAssetsPath + main.instance.blockPath + "/" + directoryInfo.Name.Replace("Extract","") + "/" + jsonNameWithoutExtension);
 
-                        if (jsonNameWithoutExtension.StartsWith(pngNameWithoutExtension))
+                        string geo_destinationPath = Path.Combine(Application.streamingAssetsPath + main.instance.blockPath + "/" + directoryInfo.Name.Replace("Extract", "") + "/" + jsonNameWithoutExtension, jsonFile.Name);
+
+                        if (!File.Exists(geo_destinationPath))
                         {
-                            Directory.CreateDirectory(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + SubDir.Name + "/" + jsonNameWithoutExtension);
+                            jsonFile.CopyTo(geo_destinationPath);
+                        }
 
-                            string geo_destinationPath = Path.Combine(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + SubDir.Name + "/" + jsonNameWithoutExtension, jsonFile.Name);
+                        string png_destinationPath = Path.Combine(Application.streamingAssetsPath + main.instance.blockPath + "/" + directoryInfo.Name.Replace("Extract", "") + "/" + jsonNameWithoutExtension, png.Name);
 
-                            if (!File.Exists(geo_destinationPath))
-                            {
-                                jsonFile.CopyTo(geo_destinationPath);
-                            }
+                        if (!File.Exists(png_destinationPath))
+                        {
+                            png.CopyTo(png_destinationPath);
+                        }
 
-                            string png_destinationPath = Path.Combine(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + SubDir.Name + "/" + jsonNameWithoutExtension, png.Name);
+                        Data.BlockData blockData = new Data.BlockData();
+                        blockData.blockName = jsonFile.Name.Replace(".geo.json", "");
+                        blockData.format_Version = Data.VersionData.versions[1];
+                        blockData.geomerty = jsonFile.FullName;
+                        blockData.texture = png.FullName;
+                        main.instance.all_blockData.Add(blockData);
+                        GameObject model_obj = Block_Preview.instance.LoadGeoModel(jsonNameWithoutExtension);
+                        main.instance.Calculate_Selection_Box(jsonNameWithoutExtension, model_obj);
+                        JsonData.SaveToFile(geo_destinationPath.Replace(".geo", ""), blockData);
 
-                            if (!File.Exists(png_destinationPath))
-                            {
-                                png.CopyTo(png_destinationPath);
-                            }
+                        if (createObj)
+                        {
+                            string basePath = Application.streamingAssetsPath + main.instance.extractPath;
+                            string fullPath = Path.GetFullPath(directoryInfo.FullName).Replace("\\", "/");
 
-                            //FileInfo gltfFile = SubDir.GetFiles("*.gltf")
-                            //.FirstOrDefault(file => Path.GetFileNameWithoutExtension(file.Name) == jsonNameWithoutExtension);
-                            //if (gltfFile != null)
-                            //{
-                            //    string gltf_destinationPath = Path.Combine(UnityEngine.Application.streamingAssetsPath + main.instance.blockPath + "/" + SubDir.Name + "/" + jsonNameWithoutExtension, gltfFile.Name);
+                            string relativePath = fullPath.StartsWith(basePath)
+                                ? fullPath.Substring(basePath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd('/', '\\')
 
-                            //    if (!File.Exists(gltf_destinationPath))
-                            //    {
-                            //        gltfFile.CopyTo(gltf_destinationPath);
-                            //    }
-                            //}
-
-
-
-                            Data.BlockData blockData = new Data.BlockData();
-                            blockData.blockName = jsonFile.Name.Replace(".geo.json","");
-                            blockData.format_Version = Data.VersionData.versions[0];
-                            blockData.geomerty = jsonFile.FullName;
-                            blockData.texture = png.FullName;
-                            main.instance.all_blockData.Add(blockData);
-                            GameObject model_obj = Block_Preview.instance.LoadGeoModel(jsonNameWithoutExtension);
-                            main.instance.Calculate_Selection_Box(jsonNameWithoutExtension, model_obj);
-                            JsonData.SaveToFile(geo_destinationPath.Replace(".geo",""), blockData);
+                                : fullPath;
+                            main.instance.CreateBLockCentent(block_panel, blockData, relativePath);
                         }
                     }
                 }
             }
         }
-        main.instance.RemoveAllContent(model_panel);
     }
 
     public void RemoveGroupContent()
@@ -232,81 +226,87 @@ public class create_scene : MonoBehaviour
         main.instance.RemoveAllContent(block_panel);
     }
 
-    public void GetSelectedBlockData(string name)
+    public BlockData Get_SelectedBlockData(List<BlockData> blockDatas)
     {
-        BlockData result = main.instance.all_blockData.Find(b => b.blockName == name.Replace(".geo.json",""));
-
-        if (result != null)
+        if(blockDatas == null || blockDatas.Count <= 0) return null;
+        BlockData result = new BlockData();
+        if (blockDatas.Count == 1)
         {
-            SelectedBlock = result;
-            UnityMainThreadDispatcher.Instance().Enqueue(() => name_txt.text = name.Replace(".geo.json", ""));
-            version_content.content_dropdown.options.FindLast(option => option.text == result.format_Version);
-            collision_content.content_dropdown.options.FindLast(option => option.text == result.collision.ToString());
-            rotaion_content.content_dropdown.options.FindLast(option => option.text == result.rotationType);
-            render_content.content_dropdown.options.FindLast(option => option.text == result.render_method);
-            Vector3 offset = Vector3.zero;
-            offset.x = main.instance.SmartRound(result.selectionBox_origin.x + (result.selectionBox_size.x / 2f)); 
-            offset.z = main.instance.SmartRound(result.selectionBox_origin.z + (result.selectionBox_size.z / 2f));
-            offset_Box.SetValue(offset);
-            size_Box.SetValue(result.selectionBox_size);
-            JsonData.SaveToFile(Path.GetFileNameWithoutExtension(result.geomerty).Replace(".geo", ""), result);
+            UnityMainThreadDispatcher.Instance().Enqueue(() => name_txt.text = blockDatas[0].blockName.Replace(".geo.json", ""));
+            result = blockDatas[0];
         }
         else
         {
-            Debug.Log("Fail");
+            if (blockDatas == null || blockDatas.Count == 0)
+                return null;
+
+            BlockData first = blockDatas[0];
+
+            result = new BlockData
+            {
+                blockName = blockDatas.All(b => b.blockName == first.blockName) ? first.blockName : null,
+                format_Version = blockDatas.All(b => b.format_Version == first.format_Version) ? first.format_Version : Data.VersionData.versions[0],
+                geomerty = blockDatas.All(b => b.geomerty == first.geomerty) ? first.geomerty : null,
+                texture = blockDatas.All(b => b.texture == first.texture) ? first.texture : null,
+                render_method = blockDatas.All(b => b.render_method == first.render_method) ? first.render_method : Data.RenderData.types[0],
+                destroy_time = blockDatas.All(b => b.destroy_time == first.destroy_time) ? first.destroy_time : null,
+                selectionBox_origin = blockDatas.All(b => b.selectionBox_origin == first.selectionBox_origin) ? first.selectionBox_origin : Vector3.zero,
+                selectionBox_size = blockDatas.All(b => b.selectionBox_size == first.selectionBox_size) ? first.selectionBox_size : Vector3.zero,
+                collision = blockDatas.All(b => b.collision == first.collision) ? first.collision : Data.CollisionData.value[0],
+                rotationType = blockDatas.All(b => b.rotationType == first.rotationType) ? first.rotationType : Data.RotationData.types[0]
+            };
         }
+        Show_SelectedBlockData(result);
+        return result;
     }
 
-    public void SetSelectedBlockData()
+    private void Show_SelectedBlockData(BlockData blockData)
     {
-        int result = main.instance.all_blockData.FindIndex(b => b.blockName == SelectedBlock.blockName.Replace(".geo.json", ""));
-        Debug.Log(result);
-        if (result != -1)
-        {
-            main.instance.all_blockData[result].format_Version = version_content.selectedData;
-            main.instance.all_blockData[result].namespaceId = namespace_input.text;
-            main.instance.all_blockData[result].collision = Convert.ToBoolean(collision_content.selectedData);
-            main.instance.all_blockData[result].rotationType = rotaion_content.selectedData;
-            main.instance.all_blockData[result].render_method = render_content.selectedData;
-            Vector3 offset = offset_Box.GetValue();
-            Vector3 size = size_Box.GetValue();
-            offset.x = main.instance.SmartRound((-size.x / 2f) + offset.x);
-            offset.z = main.instance.SmartRound((-size.z / 2f) + offset.z);
-            main.instance.all_blockData[result].selectionBox_origin = offset;
-            main.instance.all_blockData[result].selectionBox_size = size;
-            GetSelectedBlockData(main.instance.all_blockData[result].blockName);
-        }
-        else
-        {
-            Debug.Log("Fail");
-        }
+        int versionIndex = version_content.content_dropdown.options
+       .FindIndex(option => option.text == blockData.format_Version);
+        if (versionIndex >= 0)
+            version_content.content_dropdown.value = versionIndex;
+
+        int collisionIndex = collision_content.content_dropdown.options
+            .FindIndex(option => option.text == blockData.collision);
+        if (collisionIndex >= 0)
+            collision_content.content_dropdown.value = collisionIndex;
+
+        int rotationIndex = rotaion_content.content_dropdown.options
+            .FindIndex(option => option.text == blockData.rotationType);
+        if (rotationIndex >= 0)
+            rotaion_content.content_dropdown.value = rotationIndex;
+
+        int renderIndex = render_content.content_dropdown.options
+            .FindIndex(option => option.text == blockData.render_method);
+        if (renderIndex >= 0)
+            render_content.content_dropdown.value = renderIndex;
+
+        namespace_input.text = blockData.namespaceId;
+        size_Box.SetValue(blockData.selectionBox_size);
+        Vector3 offset = Vector3.zero;
+        offset.x = main.instance.SmartRound(blockData.selectionBox_origin.x + (blockData.selectionBox_size.x / 2f));
+        offset.z = main.instance.SmartRound(blockData.selectionBox_origin.z + (blockData.selectionBox_size.z / 2f));
+        offset_Box.SetValue(offset);
     }
 
-    public void SetAllBlockData(DataType dataType, string value)
+    public void ShowDefualt()
     {
-        int result = main.instance.all_blockData.FindIndex(b => b.blockName == SelectedBlock.blockName.Replace(".geo.json", ""));
-        Debug.Log(result);
-        if (result != -1)
-        {
-            main.instance.all_blockData[result].format_Version = version_content.selectedData;
-            main.instance.all_blockData[result].namespaceId = namespace_input.text;
-            main.instance.all_blockData[result].collision = Convert.ToBoolean(collision_content.selectedData);
-            main.instance.all_blockData[result].rotationType = rotaion_content.selectedData;
-            main.instance.all_blockData[result].render_method = render_content.selectedData;
-            Vector3 offset = offset_Box.GetValue();
-            Vector3 size = size_Box.GetValue();
-            offset.x = main.instance.SmartRound((-size.x / 2f) + offset.x);
-            offset.z = main.instance.SmartRound((-size.z / 2f) + offset.z);
-            main.instance.all_blockData[result].selectionBox_origin = offset;
-            main.instance.all_blockData[result].selectionBox_size = size;
-            GetSelectedBlockData(main.instance.all_blockData[result].blockName);
-        }
-        else
-        {
-            Debug.Log("Fail");
-        }
-        //foreach (BlockData blockData of main.instance.all_blockData){
+        UnityMainThreadDispatcher.Instance().Enqueue(() => name_txt.text = "None");
 
-        //}
+        BlockData result = new BlockData
+        {
+            blockName = string.Empty,
+            format_Version = Data.VersionData.versions[0],
+            geomerty = string.Empty,
+            texture = string.Empty,
+            render_method =Data.RenderData.types[0],
+            destroy_time = string.Empty,
+            selectionBox_origin = Vector3.zero,
+            selectionBox_size =  Vector3.zero,
+            collision = Data.CollisionData.value[0],
+            rotationType = Data.RotationData.types[0]
+        };
+    Show_SelectedBlockData(result);
     }
 }

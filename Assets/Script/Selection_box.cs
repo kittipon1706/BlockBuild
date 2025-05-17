@@ -1,17 +1,14 @@
 using PimDeWitte.UnityMainThreadDispatcher;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using TMPro;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using static Data;
 
 public class Selection_box : MonoBehaviour
 {
-    private enum selection_type
-    {
-        origin,
-        size
-    }
-
     [SerializeField]
     private TMP_InputField value_x;
     [SerializeField]
@@ -19,7 +16,7 @@ public class Selection_box : MonoBehaviour
     [SerializeField]
     private TMP_InputField value_z;
     [SerializeField] 
-    private selection_type selection_Type;
+    private DataType dataType;
 
     void Start()
     {
@@ -45,7 +42,32 @@ public class Selection_box : MonoBehaviour
     }
     private void onChangeValue(string x)
     {
-        create_scene.instance.SetSelectedBlockData();
+        Vector3 offset = GetValue();
+        Vector3 size = GetValue();
+        if (dataType == DataType.Selection_Box_Origin)
+        {
+            offset.x = main.instance.SmartRound((-size.x / 2f) + offset.x);
+            offset.y = 0;
+            offset.z = main.instance.SmartRound((-size.z / 2f) + offset.z);
+
+            List<BlockData> tempList = new List<BlockData>(main.instance.Get_AllHoldBlackData());
+
+            foreach ( BlockData blockData in tempList)
+            {
+                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Origin, string.Empty, offset);
+                main.instance.Set_HoldBlackData(main.instance.Get_BlockData(blockData.blockName));
+            }
+        }
+        else if(dataType == DataType.Selection_Box_Size)
+        {
+            List<BlockData> tempList = new List<BlockData>(main.instance.Get_AllHoldBlackData());
+
+            foreach (BlockData blockData in tempList)
+            {
+                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Size, string.Empty, size);
+                main.instance.Set_HoldBlackData(main.instance.Get_BlockData(blockData.blockName));
+            }
+        }
     }
     private void OnDestroy()
     {

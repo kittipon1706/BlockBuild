@@ -76,14 +76,14 @@ public class edit_scene : MonoBehaviour
         DirectoryInfo block_dir = main.instance.FindBlockDir("");
         if(block_dir == null) return;
         main.instance.ClearExtractFolder();
-        List<GameObject> blocks = main.instance.CreateBLocksCentent(block_dir, block_panel, null, "");
+        //List<GameObject> blocks = main.instance.CreateBLocksCentent(block_dir, block_panel, null, "");
         List<GameObject> groups = main.instance.CreateGroupsContent(block_dir, group_panel);
 
-        foreach (GameObject block in blocks)
-        {
-            button button = block.GetComponent<button>();
-            button.setup.Invoke();
-        }
+        //foreach (GameObject block in blocks)
+        //{
+        //    button button = block.GetComponent<button>();
+        //    button.setup.Invoke();
+        //}
 
         foreach (GameObject group in groups)
         {
@@ -93,7 +93,7 @@ public class edit_scene : MonoBehaviour
             group_Button.my_button.onClick.AddListener(() =>
             {
                 DirectoryInfo block_dir1 = new DirectoryInfo(block_dir.FullName + group_Button.name);
-                main.instance.CreateBLocksCentent(block_dir1, block_panel, null, group_Button.name);
+                //main.instance.CreateBLocksCentent(block_dir1, block_panel, null, group_Button.name);
             });
         }
     }
