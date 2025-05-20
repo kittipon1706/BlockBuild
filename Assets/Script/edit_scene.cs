@@ -73,11 +73,11 @@ public class edit_scene : MonoBehaviour
             file_path.text = paths[0];
         }
 #endif
-        DirectoryInfo block_dir = main.instance.FindBlockDir("");
-        if(block_dir == null) return;
-        main.instance.ClearExtractFolder();
+        //DirectoryInfo block_dir = main.instance.FindBlockDir("");
+        //if(block_dir == null) return;
+        //main.instance.ClearExtractFolder();
         //List<GameObject> blocks = main.instance.CreateBLocksCentent(block_dir, block_panel, null, "");
-        List<GameObject> groups = main.instance.CreateGroupsContent(block_dir, group_panel);
+        //List<GameObject> groups = main.instance.CreateGroupsContent(block_dir, group_panel);
 
         //foreach (GameObject block in blocks)
         //{
@@ -85,17 +85,17 @@ public class edit_scene : MonoBehaviour
         //    button.setup.Invoke();
         //}
 
-        foreach (GameObject group in groups)
-        {
-            group_button group_Button = group.GetComponent<group_button>();
-            group_Button.setup.Invoke();
-            group_Button.my_button.onClick.AddListener(RemoveBlocksContent);
-            group_Button.my_button.onClick.AddListener(() =>
-            {
-                DirectoryInfo block_dir1 = new DirectoryInfo(block_dir.FullName + group_Button.name);
-                //main.instance.CreateBLocksCentent(block_dir1, block_panel, null, group_Button.name);
-            });
-        }
+        //foreach (GameObject group in groups)
+        //{
+        //    group_button group_Button = group.GetComponent<group_button>();
+        //    group_Button.setup.Invoke();
+        //    group_Button.my_button.onClick.AddListener(RemoveBlocksContent);
+        //    group_Button.my_button.onClick.AddListener(() =>
+        //    {
+        //        DirectoryInfo block_dir1 = new DirectoryInfo(block_dir.FullName + group_Button.name);
+        //        //main.instance.CreateBLocksCentent(block_dir1, block_panel, null, group_Button.name);
+        //    });
+        //}
     }
 
     public void RemoveGroupContent()

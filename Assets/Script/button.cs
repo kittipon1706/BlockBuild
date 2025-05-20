@@ -19,7 +19,7 @@ public class button : MonoBehaviour
     [SerializeField]
     private Button hold_selected_btn;
     [SerializeField]
-    private bool Onhold;
+    public bool Onhold;
 
     private void Awake()
     {
@@ -43,7 +43,6 @@ public class button : MonoBehaviour
 
     public void Set_Hold(bool value)
     {
-        Debug.Log(value);
         Onhold = value;
         if (Onhold == true)
         {
@@ -82,7 +81,10 @@ public class button : MonoBehaviour
         else if (SceneManager.GetActiveScene().buildIndex == 2)
         {
             if (main.instance.Get_AllHoldBlackData().Count >= 1 && !Onhold == true)
-                main.instance.RemoveAll_HoldBlackData();
+            {
+                if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+                    main.instance.SetAll_HoldBlackData(false);
+            }
             Set_Hold(!Onhold);
         }
     }

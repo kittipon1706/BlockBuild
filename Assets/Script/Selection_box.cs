@@ -54,7 +54,7 @@ public class Selection_box : MonoBehaviour
 
             foreach ( BlockData blockData in tempList)
             {
-                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Origin, string.Empty, offset);
+                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Origin, string.Empty, 0.0f, offset);
                 main.instance.Set_HoldBlackData(main.instance.Get_BlockData(blockData.blockName));
             }
         }
@@ -64,7 +64,7 @@ public class Selection_box : MonoBehaviour
 
             foreach (BlockData blockData in tempList)
             {
-                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Size, string.Empty, size);
+                main.instance.Set_BlockData(blockData.blockName, DataType.Selection_Box_Size, string.Empty, 0.0f, size);
                 main.instance.Set_HoldBlackData(main.instance.Get_BlockData(blockData.blockName));
             }
         }

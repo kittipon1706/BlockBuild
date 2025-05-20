@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using static Data;
 using UnityEngine.UI;
-using static UnityEngine.ParticleSystem;
+using System.Globalization;
 
 public class create_scene : MonoBehaviour
 {
@@ -24,6 +24,42 @@ public class create_scene : MonoBehaviour
     private Button select_asset_btn;
 
     [SerializeField]
+    private Button apply_btn;
+
+    [SerializeField]
+    private Button selectAll_btn;
+
+    [SerializeField]
+    private bool selectAll_state;
+
+    [SerializeField]
+    private Button reset_filter_btn;
+
+    [SerializeField]
+    private Button default_filter_btn;
+
+    [SerializeField]
+    private Button cardinal_filter_btn;
+
+    [SerializeField]
+    private Button cardinal_f_filter_btn;
+
+    [SerializeField]
+    private Button cardinal_b_filter_btn;
+
+    [SerializeField]
+    private Button cardinal_v_filter_btn;
+
+    [SerializeField]
+    private Button facing_filter_btn;
+
+    [SerializeField]
+    private Button block_f_filter_btn;
+
+    [SerializeField]
+    private Button vertical_h_filter_btn;
+
+    [SerializeField]
     private TextMeshProUGUI project_path;
 
     [SerializeField]
@@ -37,6 +73,9 @@ public class create_scene : MonoBehaviour
 
     [SerializeField]
     private TMP_InputField namespace_input;
+
+    [SerializeField]
+    private TMP_InputField search_input;
 
     [SerializeField]
     private TextMeshProUGUI name_txt;
@@ -59,6 +98,9 @@ public class create_scene : MonoBehaviour
     [SerializeField]
     private Selection_box size_Box;
 
+    [SerializeField]
+    private Slider destroy_time;
+
     void Awake()
     {
         if (instance == null)
@@ -72,15 +114,55 @@ public class create_scene : MonoBehaviour
 
     void Start()
     {
+        selectAll_state = false;
+        search_input.onValueChanged.AddListener((string input) => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(input, string.Empty, string.Empty, block_panel, null); });
         select_project_btn.onClick.AddListener(Select_Project);
         reset_project_btn.onClick.AddListener(main.instance.Reset_Project);
         select_asset_btn.onClick.AddListener(Select_Asset);
+        apply_btn.onClick.AddListener(main.instance.ApplyAllToProject);
+        reset_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[0], block_panel,
+        new ToggleButtonColor[] { default_filter_btn.GetComponent<ToggleButtonColor>(),
+        cardinal_filter_btn.GetComponent<ToggleButtonColor>(),
+        cardinal_f_filter_btn.GetComponent<ToggleButtonColor>(),
+        cardinal_b_filter_btn.GetComponent<ToggleButtonColor>(),
+        cardinal_v_filter_btn.GetComponent<ToggleButtonColor>(),
+        facing_filter_btn.GetComponent<ToggleButtonColor>(),
+        block_f_filter_btn.GetComponent<ToggleButtonColor>(),
+        vertical_h_filter_btn.GetComponent<ToggleButtonColor>() });
+        });
+        reset_filter_btn.onClick.Invoke();
+        default_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[1], block_panel, new ToggleButtonColor[] { default_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        cardinal_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[2], block_panel, new ToggleButtonColor[] { cardinal_filter_btn.gameObject.GetComponent<ToggleButtonColor>() }); });
+        cardinal_f_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[3], block_panel, new ToggleButtonColor[] { cardinal_f_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        cardinal_b_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[4], block_panel, new ToggleButtonColor[] { cardinal_b_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        cardinal_v_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[5], block_panel, new ToggleButtonColor[] { cardinal_v_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        facing_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[6], block_panel, new ToggleButtonColor[] { facing_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        block_f_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[7], block_panel, new ToggleButtonColor[] { block_f_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        vertical_h_filter_btn.onClick.AddListener(() => { main.instance.SetAll_HoldBlackData(false); main.instance.Show_BlockBtn(search_input.text, string.Empty, RotationData.types[8], block_panel, new ToggleButtonColor[] { vertical_h_filter_btn.GetComponent<ToggleButtonColor>() }); });
+        selectAll_btn.onClick.AddListener(() => {
+            if(selectAll_state == false)
+                main.instance.SetAll_HoldBlackData(true);
+            else
+                main.instance.SetAll_HoldBlackData(false);
+            selectAll_state = !selectAll_state;
+        });
         namespace_input.onEndEdit.AddListener((string value) => {
-            foreach (BlockData blockData in main.instance.Get_AllHoldBlackData())
+            List<BlockData> blockDatas = main.instance.Get_AllHoldBlackData();
+            foreach (BlockData blockData in blockDatas)
             {
-                main.instance.Set_BlockData(blockData.blockName, DataType.NameSpace, value, Vector3.zero);
+                main.instance.Set_BlockData(blockData.blockName, DataType.NameSpace, value , 0.0f, Vector3.zero);
             }
-            Get_SelectedBlockData(main.instance.Get_AllHoldBlackData());
+            Get_SelectedBlockData(blockDatas);
+        });
+
+        destroy_time.onValueChanged.AddListener((float value) =>
+        {
+            List<BlockData> blockDatas = main.instance.Get_AllHoldBlackData();
+            foreach (BlockData blockData in blockDatas)
+            {
+                main.instance.Set_BlockData(blockData.blockName, DataType.Destroy_Time, string.Empty, value, Vector3.zero);
+            }
+            Get_SelectedBlockData(blockDatas);
         });
         RemoveGroupContent();
         RemoveBlocksContent();
@@ -92,6 +174,7 @@ public class create_scene : MonoBehaviour
 #if UNITY_EDITOR
         project_path.text = EditorUtility.OpenFolderPanel("Select resouce folder", "", "");
         main.instance.project_path = project_path.text;
+        main.instance.FindBlockDir();
 #endif
 #if !UNITY_EDITOR
 
@@ -126,26 +209,38 @@ public class create_scene : MonoBehaviour
             DirectoryInfo subs_folder_directoryInfo = new DirectoryInfo(Application.streamingAssetsPath + main.instance.extractPath);
             foreach (DirectoryInfo sub_folder_directoryInfo in subs_folder_directoryInfo.GetDirectories())
             {
-                MatchBlockFile(sub_folder_directoryInfo, false);
+                MatchBlockFile(sub_folder_directoryInfo, true);
             }
+
+            GameObject no_group = main.instance.CreateGroupContent("No Folder", group_panel);
+            no_group.transform.SetAsFirstSibling();
+            group_button no_group_Button = no_group.GetComponent<group_button>();
+            no_group_Button.setup.Invoke();
+            no_group_Button.my_button.onClick.AddListener(() =>
+            {
+                main.instance.SetAll_HoldBlackData(false);
+                main.instance.Show_BlockBtn(search_input.text, "No_folder", string.Empty, block_panel, null);
+            });
+
+            GameObject all_group = main.instance.CreateGroupContent("All", group_panel);
+            all_group.transform.SetAsFirstSibling();
+            group_button all_group_Button = all_group.GetComponent<group_button>();
+            all_group_Button.setup.Invoke();
+            all_group_Button.my_button.onClick.AddListener(() =>
+            {
+                main.instance.SetAll_HoldBlackData(false);
+                main.instance.Show_BlockBtn(search_input.text, string.Empty, string.Empty, block_panel, null);
+            });
+
             List<GameObject> groups = main.instance.CreateGroupsContent(asset_directoryInfo, group_panel);
-            groups.Add(main.instance.CreateGroupContent("", group_panel));
             foreach (GameObject group in groups)
             {
                 group_button group_Button = group.GetComponent<group_button>();
                 group_Button.setup.Invoke();
-                group_Button.my_button.onClick.AddListener(RemoveBlocksContent);
                 group_Button.my_button.onClick.AddListener(() =>
                 {
-                    DirectoryInfo blocks_dirs = new DirectoryInfo(Application.streamingAssetsPath + main.instance.blockPath + "/" + group_Button.name);
-                    foreach(DirectoryInfo blocks_dir in blocks_dirs.GetDirectories())
-                    {
-                        FileInfo[] jsonFiles = blocks_dir.GetFiles("*.geo.json");
-                        foreach (FileInfo jsonFile in jsonFiles)
-                        {
-                            main.instance.CreateBLockCentent(block_panel, main.instance.Get_BlockData(jsonFile.Name.Replace(".geo.json", "")), group_Button.name);
-                        }
-                    }
+                    main.instance.SetAll_HoldBlackData(false);
+                    main.instance.Show_BlockBtn(search_input.text, group_Button.name, string.Empty, block_panel, null);
                 });
             }
             Block_Preview.instance.ClearModel(false);
@@ -194,10 +289,12 @@ public class create_scene : MonoBehaviour
                         blockData.format_Version = Data.VersionData.versions[1];
                         blockData.geomerty = jsonFile.FullName;
                         blockData.texture = png.FullName;
+                        blockData.file_path = geo_destinationPath.Replace(".geo", "");
+                        blockData.destroy_time = 0.5f;
                         main.instance.all_blockData.Add(blockData);
                         GameObject model_obj = Block_Preview.instance.LoadGeoModel(jsonNameWithoutExtension);
                         main.instance.Calculate_Selection_Box(jsonNameWithoutExtension, model_obj);
-                        JsonData.SaveToFile(geo_destinationPath.Replace(".geo", ""), blockData);
+                        JsonData.SaveToFile(blockData.file_path, blockData);
 
                         if (createObj)
                         {
@@ -208,6 +305,8 @@ public class create_scene : MonoBehaviour
                                 ? fullPath.Substring(basePath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).TrimEnd('/', '\\')
 
                                 : fullPath;
+
+                            if (relativePath.Length <= 0) relativePath = "No_folder";
                             main.instance.CreateBLockCentent(block_panel, blockData, relativePath);
                         }
                     }
@@ -245,11 +344,12 @@ public class create_scene : MonoBehaviour
             result = new BlockData
             {
                 blockName = blockDatas.All(b => b.blockName == first.blockName) ? first.blockName : null,
+                namespaceId = blockDatas.All(b => b.namespaceId == first.namespaceId) ? first.namespaceId : "xxx",
                 format_Version = blockDatas.All(b => b.format_Version == first.format_Version) ? first.format_Version : Data.VersionData.versions[0],
                 geomerty = blockDatas.All(b => b.geomerty == first.geomerty) ? first.geomerty : null,
                 texture = blockDatas.All(b => b.texture == first.texture) ? first.texture : null,
                 render_method = blockDatas.All(b => b.render_method == first.render_method) ? first.render_method : Data.RenderData.types[0],
-                destroy_time = blockDatas.All(b => b.destroy_time == first.destroy_time) ? first.destroy_time : null,
+                destroy_time = blockDatas.All(b => b.destroy_time == first.destroy_time) ? first.destroy_time : 0.5f,
                 selectionBox_origin = blockDatas.All(b => b.selectionBox_origin == first.selectionBox_origin) ? first.selectionBox_origin : Vector3.zero,
                 selectionBox_size = blockDatas.All(b => b.selectionBox_size == first.selectionBox_size) ? first.selectionBox_size : Vector3.zero,
                 collision = blockDatas.All(b => b.collision == first.collision) ? first.collision : Data.CollisionData.value[0],
@@ -281,8 +381,8 @@ public class create_scene : MonoBehaviour
             .FindIndex(option => option.text == blockData.render_method);
         if (renderIndex >= 0)
             render_content.content_dropdown.value = renderIndex;
-
-        namespace_input.text = blockData.namespaceId;
+        destroy_time.value = blockData.destroy_time;
+        UnityMainThreadDispatcher.Instance().Enqueue(() => namespace_input.text = blockData.namespaceId);
         size_Box.SetValue(blockData.selectionBox_size);
         Vector3 offset = Vector3.zero;
         offset.x = main.instance.SmartRound(blockData.selectionBox_origin.x + (blockData.selectionBox_size.x / 2f));
@@ -297,11 +397,12 @@ public class create_scene : MonoBehaviour
         BlockData result = new BlockData
         {
             blockName = string.Empty,
+            namespaceId = "xxx",
             format_Version = Data.VersionData.versions[0],
             geomerty = string.Empty,
             texture = string.Empty,
             render_method =Data.RenderData.types[0],
-            destroy_time = string.Empty,
+            destroy_time = 0.5f,
             selectionBox_origin = Vector3.zero,
             selectionBox_size =  Vector3.zero,
             collision = Data.CollisionData.value[0],

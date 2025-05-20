@@ -14,7 +14,8 @@ public class Data : MonoBehaviour
         Render,
         NameSpace,
         Selection_Box_Origin,
-        Selection_Box_Size
+        Selection_Box_Size,
+        Destroy_Time
     }
     public static class VersionData
     {
@@ -51,10 +52,11 @@ public class Data : MonoBehaviour
         public string render_method = "alpha_test";
         public string geomerty;
         public string texture;
-        public string destroy_time = "1.0";
+        public float destroy_time = 0.5f;
         public Vector3 selectionBox_origin;
         public Vector3 selectionBox_size;
-        
+        public string file_path;
+
         public string Identifier => $"{namespaceId}:{blockName}";
     }
 }

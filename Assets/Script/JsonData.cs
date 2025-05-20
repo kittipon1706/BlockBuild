@@ -17,7 +17,6 @@ public class JsonData : MonoBehaviour
 
         bool isDisabledBox = data.selectionBox_size == Vector3.zero;
 
-        // กำหนด selection_box
         components["minecraft:selection_box"] = isDefaultBox ? true :
             isDisabledBox ? false : new
             {
@@ -33,7 +32,6 @@ public class JsonData : MonoBehaviour
                 }
             };
 
-        // กำหนด collision_box
         components["minecraft:collision_box"] = (data.collision == "false" || isDisabledBox) ? false :
             isDefaultBox ? true : new
             {
@@ -49,18 +47,16 @@ public class JsonData : MonoBehaviour
                 }
             };
 
-        // minecraft:geometry
         components["minecraft:geometry"] = new
         {
-            identifier = "geometry." + data.namespaceId + "." + Path.GetFileNameWithoutExtension(data.geomerty).Replace(".geo", "")
+            identifier = "geometry." + data.namespaceId + "." + Path.GetFileNameWithoutExtension(data.geomerty).Replace(".geo","")
         };
 
-        // minecraft:material_instances
         components["minecraft:material_instances"] = new Dictionary<string, object>
     {
         {
             "*", new {
-                texture =  data.namespaceId + ":" + Path.GetFileNameWithoutExtension(data.texture),
+                texture = data.texture,
                 render_method = data.render_method
             }
         }
@@ -68,7 +64,7 @@ public class JsonData : MonoBehaviour
 
         components["minecraft:destructible_by_mining"] = new
         {
-            seconds_to_destroy = data.destroy_time,
+            seconds_to_destroy = data.destroy_time.ToString(),
             item_specific_speeds = new[]
             {
             new
@@ -82,88 +78,141 @@ public class JsonData : MonoBehaviour
         components["tag:minecraft:is_pickaxe_item_destructible"] = new { };
 
         var permutations = new List<object>();
+        var traits = new Dictionary<string, object>();
 
         switch (data.rotationType)
         {
-            case "Default":
-                // ไม่มีการหมุนพิเศษ
-                break;
-
             case "Cardinal":
-                // หมุนตามแกน Y 4 ทิศ (facing)
-                permutations.AddRange(new[]
+                traits["minecraft:placement_direction"] = new
                 {
-                new { condition = "q.block_state.facing == north", components = new { minecraft__transformation = new { rotation = new float[] {0, 0, 0} } } },
-                new { condition = "q.block_state.facing == east",  components = new { minecraft__transformation = new { rotation = new float[] {0, 90, 0} } } },
-                new { condition = "q.block_state.facing == south", components = new { minecraft__transformation = new { rotation = new float[] {0, 180, 0} } } },
-                new { condition = "q.block_state.facing == west",  components = new { minecraft__transformation = new { rotation = new float[] {0, 270, 0} } } }
-            });
-                break;
-
-            case "Cardinal Facing":
-                // หมุน 6 ทิศ (facing) และอาจมีการหมุนเพิ่มเติมตามตำแหน่ง (ส่วนขยายในอนาคต)
-                permutations.AddRange(new[]
-                {
-                new { condition = "q.block_state.facing == north", components = new { minecraft__transformation = new { rotation = new float[] {0, 0, 0} } } },
-                new { condition = "q.block_state.facing == east",  components = new { minecraft__transformation = new { rotation = new float[] {0, 90, 0} } } },
-                new { condition = "q.block_state.facing == south", components = new { minecraft__transformation = new { rotation = new float[] {0, 180, 0} } } },
-                new { condition = "q.block_state.facing == west",  components = new { minecraft__transformation = new { rotation = new float[] {0, 270, 0} } } }
-            });
-                // TODO: เพิ่มการหมุนตามตำแหน่ง block face ในอนาคต
-                break;
-
-            case "Cardinal Block Face":
-                // วางบนพื้นผิวบล็อก (block_face) 4 ทิศ
-                permutations.AddRange(new[]
-                {
-                new { condition = "q.block_state.block_face == north", components = new { minecraft__transformation = new { rotation = new float[] {0, 0, 0} } } },
-                new { condition = "q.block_state.block_face == east",  components = new { minecraft__transformation = new { rotation = new float[] {0, 90, 0} } } },
-                new { condition = "q.block_state.block_face == south", components = new { minecraft__transformation = new { rotation = new float[] {0, 180, 0} } } },
-                new { condition = "q.block_state.block_face == west",  components = new { minecraft__transformation = new { rotation = new float[] {0, 270, 0} } } }
-            });
-                break;
-
-            case "Cardinal Vertical Half":
-                // วางบนพื้นผิวบล็อก (block_face) 4 ทิศ และแบ่งช่วงบน/ล่าง (vertical_half)
-                permutations.AddRange(new[]
-                {
-                new { condition = "q.block_state.vertical_half == top", components = new { minecraft__transformation = new { rotation = new float[] {180, 0, 0} } } }
+                    enabled_states = new[] { "minecraft:cardinal_direction" },
+                    y_rotation_offset = 180
+                };
+                permutations.AddRange(new[] {
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
             });
                 break;
 
             case "Facing":
-                // หมุน 6 ทิศ (facing)
-                permutations.AddRange(new[]
+                traits["minecraft:placement_direction"] = new
                 {
-                new { condition = "q.block_state.facing == north", components = new { minecraft__transformation = new { rotation = new float[] {0, 0, 0} } } },
-                new { condition = "q.block_state.facing == east",  components = new { minecraft__transformation = new { rotation = new float[] {0, 90, 0} } } },
-                new { condition = "q.block_state.facing == south", components = new { minecraft__transformation = new { rotation = new float[] {0, 180, 0} } } },
-                new { condition = "q.block_state.facing == west",  components = new { minecraft__transformation = new { rotation = new float[] {0, 270, 0} } } },
-                new { condition = "q.block_state.facing == up",    components = new { minecraft__transformation = new { rotation = new float[] {270, 0, 0} } } },
-                new { condition = "q.block_state.facing == down",  components = new { minecraft__transformation = new { rotation = new float[] {90, 0, 0} } } }
+                    enabled_states = new[] { "minecraft:facing_direction" },
+                    y_rotation_offset = 180
+                };
+                permutations.AddRange(new[] {
+                new { condition = "q.block_state('minecraft:facing_direction') == 'up'",    components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
+                new { condition = "q.block_state('minecraft:facing_direction') == 'down'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
+                new { condition = "q.block_state('minecraft:facing_direction') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "q.block_state('minecraft:facing_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "q.block_state('minecraft:facing_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "q.block_state('minecraft:facing_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
+            });
+                break;
+
+            case "Cardinal Facing":
+                traits["minecraft:placement_direction"] = new
+                {
+                    enabled_states = new[] { "minecraft:cardinal_direction", "minecraft:facing_direction" }
+                };
+                permutations.AddRange(new[] {
+                new { condition = "query.block_state('minecraft:facing_direction') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'north'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 90, 0 } } } },
+                   new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'north'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 90, 0 } } } }
+            });
+                break;
+
+            case "Cardinal Block Face":
+                traits["minecraft:placement_direction"] = new
+                {
+                    enabled_states = new[] { "minecraft:cardinal_direction" }
+                };
+                traits["minecraft:placement_direction"] = new
+                {
+                    enabled_states = new[] { "minecraft:block_face" }
+                };
+                permutations.AddRange(new[] {
+                new { condition = "query.block_state('minecraft:block_face') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'nort'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'nort'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 90, 0 } } } }
             });
                 break;
 
             case "Block Face":
-                // วางบนพื้นผิวบล็อก 6 ทิศ (block_face)
-                permutations.AddRange(new[]
+                traits["minecraft:placement_direction"] = new
                 {
-                new { condition = "q.block_state.block_face == north", components = new { minecraft__transformation = new { rotation = new float[] {0, 0, 0} } } },
-                new { condition = "q.block_state.block_face == east",  components = new { minecraft__transformation = new { rotation = new float[] {0, 90, 0} } } },
-                new { condition = "q.block_state.block_face == south", components = new { minecraft__transformation = new { rotation = new float[] {0, 180, 0} } } },
-                new { condition = "q.block_state.block_face == west",  components = new { minecraft__transformation = new { rotation = new float[] {0, 270, 0} } } },
-                new { condition = "q.block_state.block_face == up",    components = new { minecraft__transformation = new { rotation = new float[] {270, 0, 0} } } },
-                new { condition = "q.block_state.block_face == down",  components = new { minecraft__transformation = new { rotation = new float[] {90, 0, 0} } } }
+                    enabled_states = new[] { "minecraft:block_face" }
+                };
+                permutations.AddRange(new[] {
+                new { condition = "query.block_state('minecraft:block_face') == 'up'",    components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
             });
                 break;
 
-            case "Vertical Half":
-                // วางบนพื้นผิวบล็อก ช่วงบน/ล่าง (vertical_half)
-                permutations.AddRange(new[]
+            case "Cardinal Vertical Half":
+                traits["minecraft:placement_direction"] = new
                 {
-                new { condition = "q.block_state.vertical_half == top", components = new { minecraft__transformation = new { rotation = new float[] {180, 0, 0} } } }
-            });
+                    enabled_states = new[] { "minecraft:cardinal_direction" },
+                    y_rotation_offset = 180
+                };
+                traits["minecraft:placement_direction"] = new
+                {
+                    enabled_states = new[] { "minecraft:vertical_half" }
+                };
+                permutations.AddRange(new[] {
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'north'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('minecraft:vertical_half') == 'top'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 180 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('minecraft:vertical_half') == 'top'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 180 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('minecraft:vertical_half') == 'top'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 180 } } } },
+                new { condition = "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('minecraft:vertical_half') == 'top'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 180 } } } },
+                });
                 break;
+
+            case "Vertical Half":
+                traits["minecraft:placement_direction"] = new
+                {
+                    enabled_states = new[] { "minecraft:vertical_half" }
+                };
+                permutations.Add(new { condition = "query.block_state('minecraft:vertical_half') == 'top'", components = new { minecraft__transformation = new { translation = new float[] { 0, 0.5f, 0 } } } });
+                break;
+        }
+
+        var description = new Dictionary<string, object>
+    {
+        { "identifier", data.Identifier },
+        { "menu_category", new { category = "construction" } }
+    };
+
+        if (traits.Count > 0)
+        {
+            description["traits"] = traits;
         }
 
         var blockJson = new Dictionary<string, object>
@@ -172,13 +221,7 @@ public class JsonData : MonoBehaviour
         {
             "minecraft:block", new Dictionary<string, object>
             {
-                {
-                    "description", new Dictionary<string, object>
-                    {
-                        { "identifier", data.Identifier },
-                        { "menu_category", new { category = "construction" } }
-                    }
-                },
+                { "description", description },
                 { "components", components }
             }
         }
@@ -191,6 +234,7 @@ public class JsonData : MonoBehaviour
 
         return JsonConvert.SerializeObject(blockJson, Formatting.Indented);
     }
+
 
 
     public static void SaveToFile(string outputPath, BlockData data)
@@ -330,4 +374,9 @@ public class JsonData : MonoBehaviour
         public float[] rotation;
     }
 
+    [System.Serializable]
+    public class Translation
+    {
+        public float[] translation;
+    }
 }

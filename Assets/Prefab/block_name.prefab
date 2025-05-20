@@ -84,7 +84,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 807000959603863341}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
@@ -295,6 +295,7 @@ MonoBehaviour:
     destroy_time: 1.0
     selectionBox_origin: {x: 0, y: 0, z: 0}
     selectionBox_size: {x: 0, y: 0, z: 0}
+    file_path: 
   hold_selected_btn: {fileID: 4613684328974295117}
   Onhold: 0
 --- !u!114 &4149644383481476608

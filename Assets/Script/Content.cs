@@ -37,7 +37,7 @@ public class Content : MonoBehaviour
         List<BlockData> tempList = new List<BlockData>(main.instance.Get_AllHoldBlackData());
         foreach (BlockData blockData in tempList)
         {
-            main.instance.Set_BlockData(blockData.blockName, dataType, selectedData, Vector3.zero);
+            main.instance.Set_BlockData(blockData.blockName, dataType, selectedData, 0.0f, Vector3.zero);
         }
     }
 

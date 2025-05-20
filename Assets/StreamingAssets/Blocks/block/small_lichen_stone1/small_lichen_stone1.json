@@ -5,6 +5,14 @@
       "identifier": "xxx:small_lichen_stone1",
       "menu_category": {
         "category": "construction"
+      },
+      "traits": {
+        "minecraft:placement_direction": {
+          "enabled_states": [
+            "minecraft:cardinal_direction"
+          ],
+          "y_rotation_offset": 180
+        }
       }
     },
     "components": {
@@ -33,16 +41,16 @@
         ]
       },
       "minecraft:geometry": {
-        "identifier": "geometry.xxx.small_lichen_stone1"
+        "identifier": "small_lichen_stone1.geo"
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "xxx:small_lichen_stone",
+          "texture": "D:\\Unity_Project\\Entity_Generator\\BlockBuild\\Assets\\StreamingAssets\\Extract\\block\\small_lichen_stone.png",
           "render_method": "alpha_test"
         }
       },
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": "1.0",
+        "seconds_to_destroy": "0.5",
         "item_specific_speeds": [
           {
             "item": {
@@ -56,7 +64,7 @@
     },
     "permutations": [
       {
-        "condition": "q.block_state.facing == north",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north'",
         "components": {
           "minecraft__transformation": {
             "rotation": [
@@ -68,19 +76,19 @@
         }
       },
       {
-        "condition": "q.block_state.facing == east",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east'",
         "components": {
           "minecraft__transformation": {
             "rotation": [
               0.0,
-              90.0,
+              -90.0,
               0.0
             ]
           }
         }
       },
       {
-        "condition": "q.block_state.facing == south",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south'",
         "components": {
           "minecraft__transformation": {
             "rotation": [
@@ -92,12 +100,12 @@
         }
       },
       {
-        "condition": "q.block_state.facing == west",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west'",
         "components": {
           "minecraft__transformation": {
             "rotation": [
               0.0,
-              270.0,
+              90.0,
               0.0
             ]
           }

@@ -6,14 +6,16 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using TMPro;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using static Data;
 using static UnityEngine.Rendering.DebugUI;
 
 public class main : MonoBehaviour
 {
-    public static main instance;    
+    public static main instance;
 
     [SerializeField]
     public string extractPath;
@@ -23,7 +25,15 @@ public class main : MonoBehaviour
     [SerializeField]
     public string project_path;
     [SerializeField]
+    public string bp_path;
+    [SerializeField]
+    public string rp_path;
+    [SerializeField]
     public string og_block_path;
+    [SerializeField]
+    public string og_model_path;
+    [SerializeField]
+    public string og_texture_path;
     [SerializeField]
     public string defualt_path = "Project Path";
     [SerializeField]
@@ -34,13 +44,17 @@ public class main : MonoBehaviour
     public List<Data.BlockData> all_HoldblockData = new List<Data.BlockData>();
     [SerializeField]
     public List<Data.BlockData> all_blockData = new List<Data.BlockData>();
+    [SerializeField]
+    public List<string> rotate_filter = new List<string>();
+    [SerializeField]
+    public string group_filter;
 
     void Awake()
     {
-        if(instance == null)
+        if (instance == null)
         {
             instance = this;
-        }else Destroy(gameObject);
+        } else Destroy(gameObject);
 
         DontDestroyOnLoad(gameObject);
     }
@@ -57,7 +71,7 @@ public class main : MonoBehaviour
 
     void Update()
     {
-        
+
     }
     private void Craete_Folder_Project()
     {
@@ -213,20 +227,32 @@ public class main : MonoBehaviour
         }
     }
 
-    public DirectoryInfo FindBlockDir(string subfolderl)
+    public void FindBlockDir()
     {
         DirectoryInfo block_dir = null;
+        DirectoryInfo model_dir = null;
+        DirectoryInfo texture_dir = null;
 
         if (project_path.Length > 0)
         {
             DirectoryInfo[] dirs = new DirectoryInfo(project_path).GetDirectories();
             DirectoryInfo bp_dir = null;
+            DirectoryInfo rp_dir = null;
             foreach (DirectoryInfo dir in dirs)
             {
                 if (dir.Name.Contains("bp") || dir.Name.Contains("BP"))
                     bp_dir = dir;
                 else if (dir.Name == "blocks")
                     block_dir = dir;
+
+                if (!dir.Name.Contains("rp") && !dir.Name.Contains("RP"))
+                {
+                    if (dir.Name == "models")
+                        model_dir = dir;
+                    else if (dir.Name == "textures")
+                        texture_dir = dir;
+                }
+                else rp_dir = dir;
             }
 
             if (bp_dir != null && block_dir == null)
@@ -242,9 +268,31 @@ public class main : MonoBehaviour
                 if (project_path.Contains("blocks"))
                     block_dir = new DirectoryInfo(project_path);
             }
+
+            if (rp_dir != null)
+            {
+                foreach (DirectoryInfo dir in rp_dir.GetDirectories())
+                {
+                    if (dir.Name == "models")
+                        model_dir = dir;
+                    else if (dir.Name == "textures")
+                        texture_dir = dir;
+                }
+            }
+            else
+            {
+                if (project_path.Contains("models"))
+                    model_dir = new DirectoryInfo(project_path);
+                if (project_path.Contains("textures"))
+                    texture_dir = new DirectoryInfo(project_path);
+            }
+
             og_block_path = block_dir.FullName;
+            og_model_path = model_dir.FullName;
+            og_texture_path = texture_dir.FullName;
+            rp_path = rp_dir.FullName;
+            bp_path = bp_dir.FullName;
         }
-        return block_dir;
     }
 
     public void OnApplicationQuit()
@@ -257,6 +305,15 @@ public class main : MonoBehaviour
     public (Vector3 offset, Vector3 size) Calculate_Selection_Box(string name, GameObject model_obj)
     {
         BoxCollider boxCollider = model_obj.GetComponent<BoxCollider>();
+        Vector3 newSize = boxCollider.size;
+
+        if (newSize.x >= 1.0f)
+            newSize.x = 1.0f;
+
+        if (newSize.z >= 1.0f)
+            newSize.z = 1.0f;
+
+        boxCollider.size = newSize;
 
         Vector3 localCenter = boxCollider.center;
         Vector3 localOffset = model_obj.transform.localPosition;
@@ -295,7 +352,7 @@ public class main : MonoBehaviour
         return all_blockData.FirstOrDefault(b => b.blockName == name) ?? null;
     }
 
-    public void Set_BlockData(string name, DataType dataType, string value, Vector3 vecValue)
+    public void Set_BlockData(string name, DataType dataType, string value, float flValue, Vector3 vecValue)
     {
         BlockData blockData = Get_BlockData(name);
 
@@ -303,7 +360,7 @@ public class main : MonoBehaviour
         {
             switch (dataType)
             {
-                case DataType.Version :
+                case DataType.Version:
                     blockData.format_Version = value;
                     break;
                 case DataType.Render:
@@ -324,6 +381,9 @@ public class main : MonoBehaviour
                 case DataType.Selection_Box_Size:
                     blockData.selectionBox_size = vecValue;
                     break;
+                case DataType.Destroy_Time:
+                    blockData.destroy_time = flValue;
+                    break;
             }
             int index = all_blockData.FindIndex(b => b.blockName == blockData.blockName);
             all_blockData[index] = blockData;
@@ -332,8 +392,77 @@ public class main : MonoBehaviour
         {
             all_blockData.Add(blockData);
         }
+
+        JsonData.SaveToFile(blockData.file_path, blockData);
+    }
+    public void Show_AllBlockBtn(Transform parent)
+    {
+        foreach (Transform child in parent)
+        {
+            button button = child.GetComponent<button>();
+            if (button != null)
+            {
+                button.gameObject.SetActive(true);
+            }
+        }
     }
 
+    public void Show_BlockBtn(string searchText, string sub_folder, string rotationType, Transform parent, ToggleButtonColor[] toggleButtonColors)
+    {
+        Show_AllBlockBtn(parent);
+
+        if (rotationType != string.Empty && toggleButtonColors.Length > 0)
+        {
+            if (!rotate_filter.Contains(rotationType))
+            {
+                foreach (ToggleButtonColor toggleButtonColor in toggleButtonColors)
+                {
+                    toggleButtonColor.SetButtonColor(UnityEngine.Color.green);
+                }
+                rotate_filter.Add(rotationType);
+            }
+            else
+            {
+                foreach (ToggleButtonColor toggleButtonColor in toggleButtonColors)
+                {
+                    toggleButtonColor.SetButtonColor(UnityEngine.Color.white);
+                }
+                rotate_filter.Remove(rotationType);
+            }
+
+            if (rotationType == RotationData.types[0])
+            {
+                foreach (ToggleButtonColor toggleButtonColor in toggleButtonColors)
+                {
+                    toggleButtonColor.SetButtonColor(UnityEngine.Color.green);
+                }
+                rotate_filter = new List<string> { RotationData.types[1], RotationData.types[2], RotationData.types[3], RotationData.types[4], RotationData.types[5], RotationData.types[6], RotationData.types[7], RotationData.types[8] };
+            }
+        }
+
+        group_filter = sub_folder;
+
+        foreach (Transform child in parent)
+        {
+            button button = child.GetComponent<button>();
+            if (button != null)
+            {
+                if (searchText != string.Empty)
+                {
+                    button.gameObject.SetActive(button.blockData.blockName.ToLower().Contains(searchText.ToLower()));
+                }
+
+                if (group_filter != string.Empty)
+                {
+                    if (button.sub_folder != sub_folder)
+                        button.gameObject.SetActive(false);
+                }
+
+                if (!rotate_filter.Contains(button.blockData.rotationType))
+                    button.gameObject.SetActive(false);
+            }
+        }
+    }
     public void Set_HoldBlackData(BlockData blockData)
     {
         int index = all_HoldblockData.FindIndex(b => b.blockName == blockData.blockName);
@@ -353,18 +482,94 @@ public class main : MonoBehaviour
         all_HoldblockData.RemoveAll(b => b.blockName == blockData.blockName);
     }
 
-    public void RemoveAll_HoldBlackData()
+    public void SetAll_HoldBlackData(bool value)
     {
-        button[] buttons = FindObjectsOfType<button>();
-
-        foreach (button btn in buttons)
+        if (create_scene.instance != null)
         {
-            btn.Set_Hold(false);
+            foreach (Transform child in create_scene.instance.block_panel)
+            {
+                button button = child.GetComponent<button>();
+                if (button != null)
+                {
+                    button.Set_Hold(value);
+                }
+            }
         }
     }
 
     public List<BlockData> Get_AllHoldBlackData()
     {
         return all_HoldblockData;
+    }
+
+    public void ApplyAllToProject()
+    {
+        DirectoryInfo block_dir = new DirectoryInfo(Path.Combine(Application.streamingAssetsPath + blockPath));
+
+        foreach (DirectoryInfo dir in block_dir.GetDirectories())
+        {
+            ApplyFilesFromDir(dir);
+            foreach (DirectoryInfo sub in dir.GetDirectories())
+                ApplyFilesFromDir(sub);
+        }
+    }
+
+    private void ApplyFilesFromDir(DirectoryInfo dir)
+    {
+        ApplyFileType(dir.GetFiles("*.json"), ".json", og_block_path, "json");
+        ApplyFileType(dir.GetFiles("*.geo.json"), ".geo.json", Path.Combine(og_model_path, "blocks"), "geo");
+        ApplyFileType(dir.GetFiles("*.png"), ".png", Path.Combine(og_texture_path, "blocks"), "png");
+    }
+
+    private void ApplyFileType(FileInfo[] files, string extension, string baseOutputPath, string type)
+    {
+        foreach (FileInfo file in files)
+        {
+            if (type == "json" && file.Name.Contains(".geo")) continue;
+
+            string nameWithoutExt = file.Name.Replace(extension, "");
+            BlockData blockData = Get_BlockData(nameWithoutExt);
+            if (blockData == null) continue;
+
+            string[] parts = blockData.namespaceId.Split('_');
+            if (parts.Length < 1) continue;
+
+            string saveFolder;
+
+            if (type == "png")
+            {
+                // textures/namespace/blocks/...
+                string namespacePart = parts[0];
+                saveFolder = Path.Combine(baseOutputPath, namespacePart, "blocks");
+            }
+            else
+            {
+                // ใช้ 1 หรือ 2 part ตามปกติ
+                List<string> result = new List<string>();
+                if (parts.Length >= 2)
+                {
+                    if (!result.Contains(parts[0])) result.Add(parts[0]);
+                    if (!result.Contains(parts[1])) result.Add(parts[1]);
+                }
+                else result.Add(blockData.namespaceId);
+
+                saveFolder = baseOutputPath;
+                foreach (string part in result)
+                    saveFolder = Path.Combine(saveFolder, part);
+            }
+
+            if (!Directory.Exists(saveFolder))
+            {
+                if (File.Exists(saveFolder))
+                {
+                    Debug.LogError("Cannot create folder. A file with the same name exists: " + saveFolder);
+                    continue;
+                }
+                Directory.CreateDirectory(saveFolder);
+            }
+
+            string fullFilePath = Path.Combine(saveFolder, file.Name);
+            file.CopyTo(fullFilePath, true);
+        }
     }
 }

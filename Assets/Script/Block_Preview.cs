@@ -167,7 +167,6 @@ public class Block_Preview : MonoBehaviour
                 MeshRenderer mr = go.AddComponent<MeshRenderer>();
                 mr.material = blockMat;
 
-                // คุณอาจจะอยากตั้ง position ของ go เป็น zero เพราะตำแหน่งถูกจัดใน vertices แล้ว
                 go.transform.localPosition = Vector3.zero;
             }
         }
