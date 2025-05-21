@@ -1006,6 +1006,19 @@ MonoBehaviour:
   blockPath: /Blocks
   modelPath: /Models
   texturePath: /Textures
+  project_path: 
+  bp_path: 
+  rp_path: 
+  og_block_path: 
+  og_model_path: 
+  og_texture_path: 
+  defualt_path: Project Path
+  block_prefab: {fileID: 889365336277044712, guid: 6c3295700083f2741bd6af621ebff5a6, type: 3}
+  group_prefab: {fileID: 889365336277044712, guid: 16cd372a68274b9498e5de188ad35988, type: 3}
+  all_HoldblockData: []
+  all_blockData: []
+  rotate_filter: []
+  group_filter: 
 --- !u!4 &1791927413
 Transform:
   m_ObjectHideFlags: 0

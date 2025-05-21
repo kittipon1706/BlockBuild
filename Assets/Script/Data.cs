@@ -20,7 +20,7 @@ public class Data : MonoBehaviour
     public static class VersionData
     {
         public static readonly string dispaly_name = "format version:";
-        public static readonly List<string> versions = new List<string> { "---", "1.20.80", "1.1", "2.0" };
+        public static readonly List<string> versions = new List<string> { "---", "1.21.80", "1.1", "2.0" };
     }
 
     public static class CollisionData
@@ -58,5 +58,15 @@ public class Data : MonoBehaviour
         public string file_path;
 
         public string Identifier => $"{namespaceId}:{blockName}";
+    }
+
+    [System.Serializable]
+    public class CSVData
+    {
+        public string file_name;
+        public string identifier;
+        public string rotate_type;
+        public string render_method;
+        public string destroy_time;
     }
 }

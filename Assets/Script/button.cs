@@ -56,7 +56,10 @@ public class button : MonoBehaviour
             {
                 Block_Preview.instance.ClearModel(true);
             }
-            create_scene.instance.Get_SelectedBlockData(main.instance.Get_AllHoldBlackData());
+            if (SceneManager.GetActiveScene().buildIndex == 1)
+                edit_scene.instance.Get_SelectedBlockData(main.instance.Get_AllHoldBlackData());
+            else if (SceneManager.GetActiveScene().buildIndex == 2)
+                create_scene.instance.Get_SelectedBlockData(main.instance.Get_AllHoldBlackData());
         }
         else
         {
@@ -76,17 +79,12 @@ public class button : MonoBehaviour
 
     private void Oncilck()
     {
-        if (SceneManager.GetActiveScene().buildIndex == 1)
-            edit_scene.instance.ShowBlockData(name, sub_folder);
-        else if (SceneManager.GetActiveScene().buildIndex == 2)
+        if (main.instance.Get_AllHoldBlackData().Count >= 1 && !Onhold == true)
         {
-            if (main.instance.Get_AllHoldBlackData().Count >= 1 && !Onhold == true)
-            {
-                if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
-                    main.instance.SetAll_HoldBlackData(false);
-            }
-            Set_Hold(!Onhold);
+            if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+                main.instance.SetAll_HoldBlackData(false);
         }
+        Set_Hold(!Onhold);
     }
 
     void DoSomething()

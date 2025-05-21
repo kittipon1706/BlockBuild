@@ -1,13 +1,781 @@
 ﻿using Newtonsoft.Json;
-using System.Collections;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.IO;
-using Unity.VisualScripting;
 using UnityEngine;
 using static Data;
 
 public class JsonData : MonoBehaviour
 {
+    [ContextMenu("Edit JSON Field")]
+    public static void EditJsonField(string path, BlockData data)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogError("not found: " + path);
+            return;
+        }
+
+        string jsonText = File.ReadAllText(path);
+
+        JObject root = JObject.Parse(jsonText);
+
+        root["minecraft:block"]!["description"]!["traits"]?.Parent.Remove();
+        root["minecraft:block"]!["permutations"]?.Parent.Remove();
+
+        JObject traits = new JObject();
+
+        JArray permutations = new JArray();
+
+
+        switch (data.rotationType)
+        {
+            case "Cardinal":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:cardinal_direction"),
+                        ["y_rotation_offset"] = 180
+                    }
+                };
+
+                permutations = new JArray
+        {
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'north'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 0,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'east'",
+                 ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = -90,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'south'",
+                 ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 180,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'west'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 90,
+                        ["z"] = 0
+                    }
+                }
+            }
+                };
+                break;
+            case "Facing":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:facing_direction"),
+                        ["y_rotation_offset"] = 180
+                    }
+                };
+
+                permutations = new JArray
+        {
+                     new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'up'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = -90,
+                        ["y"] = 0,
+                        ["z"] = 0
+                    }
+                }
+            },
+                      new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'down'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 90,
+                        ["y"] = 0,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'north'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 0,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'east'",
+                 ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = -90,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'south'",
+                 ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 180,
+                        ["z"] = 0
+                    }
+                }
+            },
+            new JObject
+            {
+                ["condition"] = "q.block_state('minecraft:facing_direction') == 'west'",
+                ["components"] = new JObject
+                {
+                    ["minecraft:rotation"] = new JObject
+                    {
+                        ["x"] = 0,
+                        ["y"] = 90,
+                        ["z"] = 0
+                    }
+                }
+            }
+                };
+                break;
+            case "Cardinal Facing":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:cardinal_direction", "minecraft:facing_direction")
+                    }
+                };
+
+                permutations = new JArray
+                {
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:facing_direction') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:facing_direction') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:facing_direction') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                 new JObject
+                 {
+                     ["condition"] = "q.block_state('minecraft:facing_direction') == 'west'",
+                     ["components"] = new JObject
+                     {
+                         ["minecraft:rotation"] = new JObject
+                         {
+                             ["x"] = 0,
+                             ["y"] = -90,
+                             ["z"] = 0
+                         }
+                     }
+                 },
+                 new JObject
+                 {
+                     ["condition"] = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'north'",
+                     ["components"] = new JObject
+                     {
+                         ["minecraft:rotation"] = new JObject
+                         {
+                             ["x"] = 90,
+                             ["y"] = 180,
+                             ["z"] = 0
+                         }
+                     }
+                 },
+                 new JObject
+                 {
+                     ["condition"] = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'south'",
+                     ["components"] = new JObject
+                     {
+                         ["minecraft:rotation"] = new JObject
+                         {
+                             ["x"] = 90,
+                             ["y"] = 0,
+                             ["z"] = 0
+                         }
+                     }
+                 },
+                 new JObject
+                 {
+                     ["condition"] = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'west'",
+                     ["components"] = new JObject
+                     {
+                         ["minecraft:rotation"] = new JObject
+                         {
+                             ["x"] = 90,
+                             ["y"] = -90,
+                             ["z"] = 0
+                         }
+                     }
+                 },
+                 new JObject
+                 {
+                     ["condition"] = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'east'",
+                     ["components"] = new JObject
+                     {
+                         ["minecraft:rotation"] = new JObject
+                         {
+                             ["x"] = 90,
+                             ["y"] = 90,
+                             ["z"] = 0
+                         }
+                     }
+                 },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    }
+                };
+                break;
+            case "Cardinal Block Face":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:cardinal_direction")
+                    },
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:facing_direction")
+                    }
+                };
+                permutations = new JArray
+                {
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 90,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 90,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 90,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 90,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    }
+                };
+                break;
+            case "Block Face":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:block_face")
+                    }
+                };
+                permutations = new JArray
+                {
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'up'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 90,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'down'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = -90,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:block_face') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    }
+                };
+                break;
+            case "Cardinal Vertical Half":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:cardinal_direction"),
+                        ["y_rotation_offset"] = 180
+                    },
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:vertical_half")
+                    }
+                };
+                permutations = new JArray
+                {
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'north'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'east'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = -90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'south'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 180,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'west'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 90,
+                                ["z"] = 0
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('minecraft:vertical_half') == 'top'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0,
+                                ["z"] = 180
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('minecraft:vertical_half') == 'top'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = -90,
+                                ["z"] = 180
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('minecraft:vertical_half') == 'top'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 180,
+                                ["z"] = 180
+                            }
+                        }
+                    },
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('minecraft:vertical_half') == 'top'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:rotation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 90,
+                                ["z"] = 180
+                            }
+                        }
+                    }
+                };
+                break;
+            case "Vertical Half":
+                traits = new JObject
+                {
+                    ["minecraft:placement_direction"] = new JObject
+                    {
+                        ["enabled_states"] = new JArray("minecraft:vertical_half")
+                    }
+                };
+                permutations = new JArray
+                {
+                    new JObject
+                    {
+                        ["condition"] = "q.block_state('minecraft:vertical_half') == 'top'",
+                        ["components"] = new JObject
+                        {
+                            ["minecraft:translation"] = new JObject
+                            {
+                                ["x"] = 0,
+                                ["y"] = 0.5,
+                                ["z"] = 0
+                            }
+                        }
+                    }
+                };
+                break;
+        };
+
+        root["minecraft:block"]!["description"]!["traits"] = traits;
+
+        root["minecraft:block"]!["permutations"] = permutations;
+
+        Debug.LogWarning("success found: " + path);
+
+        File.WriteAllText(path, root.ToString());
+    }
+
     public static string GenerateBlockJson(BlockData data)
     {
         var components = new Dictionary<string, object>();
@@ -56,7 +824,7 @@ public class JsonData : MonoBehaviour
     {
         {
             "*", new {
-                texture = data.texture,
+                texture = data.namespaceId + ":" + Path.GetFileNameWithoutExtension(data.texture),
                 render_method = data.render_method
             }
         }
@@ -64,7 +832,7 @@ public class JsonData : MonoBehaviour
 
         components["minecraft:destructible_by_mining"] = new
         {
-            seconds_to_destroy = data.destroy_time.ToString(),
+            seconds_to_destroy = data.destroy_time,
             item_specific_speeds = new[]
             {
             new
@@ -93,7 +861,7 @@ public class JsonData : MonoBehaviour
                 new { condition = "q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
                 new { condition = "q.block_state('minecraft:cardinal_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
                 new { condition = "q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
-            });
+                });
                 break;
 
             case "Facing":
@@ -109,7 +877,7 @@ public class JsonData : MonoBehaviour
                 new { condition = "q.block_state('minecraft:facing_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
                 new { condition = "q.block_state('minecraft:facing_direction') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
                 new { condition = "q.block_state('minecraft:facing_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
-            });
+                });
                 break;
 
             case "Cardinal Facing":
@@ -126,11 +894,11 @@ public class JsonData : MonoBehaviour
                 new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
                 new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, -90, 0 } } } },
                 new { condition = "query.block_state('minecraft:facing_direction') == 'down' && query.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 90, 0 } } } },
-                   new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'north'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'north'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 180, 0 } } } },
                 new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
                 new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, -90, 0 } } } },
                 new { condition = "query.block_state('minecraft:facing_direction') == 'up' && query.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 90, 0 } } } }
-            });
+                });
                 break;
 
             case "Cardinal Block Face":
@@ -147,7 +915,7 @@ public class JsonData : MonoBehaviour
                 new { condition = "query.block_state('minecraft:block_face') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 0, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
-                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'nort'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 180, 0 } } } },
+                new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'north'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 180, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 0, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, -90, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'down' && q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 90, 90, 0 } } } },
@@ -155,7 +923,7 @@ public class JsonData : MonoBehaviour
                 new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'south'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 0, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, -90, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'up' && q.block_state('minecraft:cardinal_direction') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { -90, 90, 0 } } } }
-            });
+                });
                 break;
 
             case "Block Face":
@@ -170,7 +938,7 @@ public class JsonData : MonoBehaviour
                 new { condition = "query.block_state('minecraft:block_face') == 'east'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, -90, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'south'", components = new { minecraft__transformation = new { rotation = new float[] { 0, 180, 0 } } } },
                 new { condition = "query.block_state('minecraft:block_face') == 'west'",  components = new { minecraft__transformation = new { rotation = new float[] { 0, 90, 0 } } } }
-            });
+                });
                 break;
 
             case "Cardinal Vertical Half":
@@ -235,8 +1003,6 @@ public class JsonData : MonoBehaviour
         return JsonConvert.SerializeObject(blockJson, Formatting.Indented);
     }
 
-
-
     public static void SaveToFile(string outputPath, BlockData data)
     {
         string json = GenerateBlockJson(data);
@@ -244,7 +1010,7 @@ public class JsonData : MonoBehaviour
     }
 
 
-[System.Serializable]
+    [System.Serializable]
     public class BlockFile
     {
         public string format_version;
@@ -276,7 +1042,7 @@ public class JsonData : MonoBehaviour
     [System.Serializable]
     public class Traits
     {
-        public PlacementDirection minecraft__placement_direction;
+        public PlacementDirection minecraft_placement_direction;
     }
 
     [System.Serializable]

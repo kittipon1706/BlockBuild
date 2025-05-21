@@ -1,3 +1,4 @@
+Ôªøusing Newtonsoft.Json.Linq;
 using PimDeWitte.UnityMainThreadDispatcher;
 using System;
 using System.Collections;
@@ -34,6 +35,10 @@ public class main : MonoBehaviour
     public string og_model_path;
     [SerializeField]
     public string og_texture_path;
+    [SerializeField]
+    public string og_texture_terrain_path;
+    [SerializeField]
+    public string og_block_json_path;
     [SerializeField]
     public string defualt_path = "Project Path";
     [SerializeField]
@@ -292,6 +297,14 @@ public class main : MonoBehaviour
             og_texture_path = texture_dir.FullName;
             rp_path = rp_dir.FullName;
             bp_path = bp_dir.FullName;
+
+            FileInfo[] terrain_texture = texture_dir.GetFiles("terrain_texture.json");
+            if(terrain_texture.Length > 0)
+                og_texture_terrain_path = terrain_texture[0].FullName;
+
+            FileInfo[] blocksJson = rp_dir.GetFiles("blocks.json");
+            if (blocksJson.Length > 0)
+                og_block_json_path = blocksJson[0].FullName;
         }
     }
 
@@ -349,7 +362,7 @@ public class main : MonoBehaviour
     }
     public BlockData Get_BlockData(string name)
     {
-        return all_blockData.FirstOrDefault(b => b.blockName == name) ?? null;
+        return all_blockData.FirstOrDefault(b => b.blockName.Contains(name)) ?? null;
     }
 
     public void Set_BlockData(string name, DataType dataType, string value, float flValue, Vector3 vecValue)
@@ -387,6 +400,34 @@ public class main : MonoBehaviour
             }
             int index = all_blockData.FindIndex(b => b.blockName == blockData.blockName);
             all_blockData[index] = blockData;
+
+            if(dataType == DataType.NameSpace)
+            {
+                var geoJson = JObject.Parse(File.ReadAllText(blockData.geomerty));
+
+                string newIdentifier = $"{"geometry"}.{blockData.namespaceId}.{Path.GetFileNameWithoutExtension(blockData.geomerty).Replace(".geo", "")}";
+
+                if (geoJson["minecraft:geometry"] is JArray geometryArray && geometryArray.Count > 0)
+                {
+                    var geometryObj = (JObject)geometryArray[0];
+
+                    if (geometryObj["description"] is JObject description)
+                    {
+                        description["identifier"] = newIdentifier;
+                        Debug.Log($"‚úÖ Updated identifier to: {newIdentifier}");
+
+                        File.WriteAllText(blockData.geomerty, geoJson.ToString(Newtonsoft.Json.Formatting.Indented));
+                    }
+                    else
+                    {
+                        Debug.Log("‚ùå geometry.description ‡πÑ‡∏°‡πà‡∏û‡∏ö");
+                    }
+                }
+                else
+                {
+                    Debug.Log("‚ùå minecraft:geometry ‡πÑ‡∏°‡πà‡∏û‡∏ö ‡∏´‡∏£‡∏∑‡∏≠‡πÑ‡∏°‡πà‡πÉ‡∏ä‡πà array");
+                }
+            }
         }
         else
         {
@@ -504,21 +545,73 @@ public class main : MonoBehaviour
 
     public void ApplyAllToProject()
     {
+        foreach (BlockData blockData in all_blockData)
+        { 
+            if (og_texture_terrain_path.Length <= 0)
+            {
+                Debug.LogError("Cannot write terrain: " + blockData.blockName);
+                return;
+            }
+            var terrainJson = JObject.Parse(File.ReadAllText(og_texture_terrain_path));
+            var textureData = (JObject)terrainJson["texture_data"];
+            List<string> result = new List<string>();
+            string saveFolder = og_texture_path;
+            string[] parts = blockData.namespaceId.Split('_');
+            if (parts.Length < 1) continue;
+            if (parts.Length >= 2)
+            {
+                if (!result.Contains(parts[0])) result.Add(parts[0]);
+                if (!result.Contains(parts[1])) result.Add(parts[1]);
+            }
+            else result.Add(blockData.namespaceId);
+
+            foreach (string part in result)
+                saveFolder = Path.Combine(saveFolder, part);
+            saveFolder = Path.Combine(saveFolder, "blocks");
+            string fullPath = Path.Combine(saveFolder, Path.GetFileNameWithoutExtension(blockData.texture) + ".png");
+            int index = fullPath.IndexOf("textures");
+            string relativePath = fullPath.Substring(index).Replace("\\", "/");
+
+            textureData[blockData.namespaceId + ":" + Path.GetFileNameWithoutExtension(blockData.texture)] = new JObject
+            {
+                ["textures"] = relativePath
+            };
+
+            File.WriteAllText(og_texture_terrain_path, terrainJson.ToString());
+
+            if (og_block_json_path.Length > 0)
+            {
+                var json = JObject.Parse(File.ReadAllText(og_block_json_path));
+
+                json[blockData.namespaceId + ":" + Path.GetFileNameWithoutExtension(blockData.geomerty).Replace(".geo", "")] = new JObject
+                {
+                    ["sound"] = "grass"
+                };
+
+                File.WriteAllText(og_block_json_path, json.ToString());
+            }
+        }
+
         DirectoryInfo block_dir = new DirectoryInfo(Path.Combine(Application.streamingAssetsPath + blockPath));
 
         foreach (DirectoryInfo dir in block_dir.GetDirectories())
         {
             ApplyFilesFromDir(dir);
             foreach (DirectoryInfo sub in dir.GetDirectories())
+            {
                 ApplyFilesFromDir(sub);
+            }
         }
+
+        
     }
 
     private void ApplyFilesFromDir(DirectoryInfo dir)
     {
-        ApplyFileType(dir.GetFiles("*.json"), ".json", og_block_path, "json");
-        ApplyFileType(dir.GetFiles("*.geo.json"), ".geo.json", Path.Combine(og_model_path, "blocks"), "geo");
-        ApplyFileType(dir.GetFiles("*.png"), ".png", Path.Combine(og_texture_path, "blocks"), "png");
+        ApplyFileType(dir.GetFiles("*.json").Where(file => !file.Name.EndsWith(".meta")).ToArray(), ".json", og_block_path, "json");
+        ApplyFileType(dir.GetFiles("*.geo.json").Where(file => !file.Name.EndsWith(".meta")).ToArray(), ".geo.json", Path.Combine(og_model_path, "blocks"), "geo");
+        ApplyFileType(dir.GetFiles("*.png").Where(file => !file.Name.EndsWith(".meta")).ToArray(), ".png", og_texture_path, "png");
+
     }
 
     private void ApplyFileType(FileInfo[] files, string extension, string baseOutputPath, string type)
@@ -526,7 +619,6 @@ public class main : MonoBehaviour
         foreach (FileInfo file in files)
         {
             if (type == "json" && file.Name.Contains(".geo")) continue;
-
             string nameWithoutExt = file.Name.Replace(extension, "");
             BlockData blockData = Get_BlockData(nameWithoutExt);
             if (blockData == null) continue;
@@ -538,13 +630,21 @@ public class main : MonoBehaviour
 
             if (type == "png")
             {
-                // textures/namespace/blocks/...
-                string namespacePart = parts[0];
-                saveFolder = Path.Combine(baseOutputPath, namespacePart, "blocks");
+                List<string> result = new List<string>();
+                if (parts.Length >= 2)
+                {
+                    if (!result.Contains(parts[0])) result.Add(parts[0]);
+                    if (!result.Contains(parts[1])) result.Add(parts[1]);
+                }
+                else result.Add(blockData.namespaceId);
+
+                saveFolder = baseOutputPath;
+                foreach (string part in result)
+                    saveFolder = Path.Combine(baseOutputPath, saveFolder, part);
+                saveFolder = Path.Combine(saveFolder, "blocks");
             }
             else
             {
-                // „™È 1 À√◊Õ 2 part µ“¡ª°µ‘
                 List<string> result = new List<string>();
                 if (parts.Length >= 2)
                 {

@@ -202,6 +202,8 @@ public class create_scene : MonoBehaviour
             file_path.text = paths[0];
         }
 #endif
+            RemoveGroupContent();
+            RemoveBlocksContent();
             DirectoryInfo asset_directoryInfo = new DirectoryInfo(asset_path.text);
             main.instance.LoadBlockAsset(asset_directoryInfo);
             DirectoryInfo no_folder_directoryInfo = new DirectoryInfo(Application.streamingAssetsPath + main.instance.extractPath);
@@ -219,6 +221,7 @@ public class create_scene : MonoBehaviour
             no_group_Button.my_button.onClick.AddListener(() =>
             {
                 main.instance.SetAll_HoldBlackData(false);
+                selectAll_state = false;
                 main.instance.Show_BlockBtn(search_input.text, "No_folder", string.Empty, block_panel, null);
             });
 
@@ -229,6 +232,7 @@ public class create_scene : MonoBehaviour
             all_group_Button.my_button.onClick.AddListener(() =>
             {
                 main.instance.SetAll_HoldBlackData(false);
+                selectAll_state = false;
                 main.instance.Show_BlockBtn(search_input.text, string.Empty, string.Empty, block_panel, null);
             });
 
@@ -240,6 +244,7 @@ public class create_scene : MonoBehaviour
                 group_Button.my_button.onClick.AddListener(() =>
                 {
                     main.instance.SetAll_HoldBlackData(false);
+                    selectAll_state = false;
                     main.instance.Show_BlockBtn(search_input.text, group_Button.name, string.Empty, block_panel, null);
                 });
             }
@@ -287,8 +292,8 @@ public class create_scene : MonoBehaviour
                         Data.BlockData blockData = new Data.BlockData();
                         blockData.blockName = jsonFile.Name.Replace(".geo.json", "");
                         blockData.format_Version = Data.VersionData.versions[1];
-                        blockData.geomerty = jsonFile.FullName;
-                        blockData.texture = png.FullName;
+                        blockData.geomerty = geo_destinationPath;
+                        blockData.texture = png_destinationPath;
                         blockData.file_path = geo_destinationPath.Replace(".geo", "");
                         blockData.destroy_time = 0.5f;
                         main.instance.all_blockData.Add(blockData);
